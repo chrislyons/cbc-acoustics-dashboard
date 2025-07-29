@@ -749,6 +749,37 @@ class TreatmentSimulator:
                     st.success(f"${budget_remaining} remaining in budget")
                 else:
                     st.error(f"${abs(budget_remaining)} over budget")
+                
+                # Add cost efficiency metrics here (moved from detailed breakdown)
+                # Calculate additional costs for efficiency metrics
+                labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
+                hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
+                fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
+                total_with_extras = total_cost + labor_cost + hardware_cost + fabric_cost
+                
+                # Calculate RT60 improvement for efficiency
+                new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
+                avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
+                                        np.mean(list(new_rt60.values()))) / 
+                                       np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
+                
+                st.markdown("---")
+                st.markdown(f"**Total Project: ${total_with_extras}**")
+                
+                # Budget analysis
+                if total_with_extras <= 1200:
+                    st.success(f"✅ Within ${1200} budget\n\nRemaining: ${1200 - total_with_extras}")
+                elif total_cost <= 1200:
+                    st.warning(f"⚠️ Panels fit budget, but total project exceeds by ${total_with_extras - 1200}")
+                else:
+                    st.error(f"❌ Over budget by ${total_with_extras - 1200}")
+                
+                st.markdown("**Cost Efficiency:**")
+                cost_per_panel = total_with_extras / total_panels if total_panels > 0 else 0
+                rt60_improvement_per_dollar = (avg_rt60_improvement / total_with_extras * 100) if total_with_extras > 0 else 0
+                
+                st.write(f"• ${cost_per_panel:.0f} per panel (all-in)")
+                st.write(f"• {rt60_improvement_per_dollar:.2f}% RT60 improvement per $100")
             else:
                 st.write("*Cart is empty - add some panels above*")
         
@@ -767,50 +798,45 @@ class TreatmentSimulator:
             with tab3:
                 fig_cost_benefit = self.create_cost_benefit_analysis()
                 st.plotly_chart(fig_cost_benefit, use_container_width=True)
-            
         
-        # Summary sections in two-column layout
+        # Treatment Summary - right underneath the charts
         if total_panels > 0:
-            summary_col1, summary_col2 = st.columns([1, 1])
+            st.subheader("Treatment Summary")
             
-            with summary_col1:
-                # Cart Summary (already rendered above, but we'll put Treatment Summary here)
-                pass
+            new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
+            avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
+                                    np.mean(list(new_rt60.values()))) / 
+                                   np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
             
-            with summary_col2:
-                st.subheader("Treatment Summary")
-                
-                new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
-                avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
-                                        np.mean(list(new_rt60.values()))) / 
-                                       np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
-                
-                predicted_sti = self.calculate_sti_improvement(avg_rt60_improvement)
-                
-                # Summary metrics
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    breakdown_parts = []
-                    if panel_2_count > 0:
-                        breakdown_parts.append(f"{panel_2_count}x 2\"")
-                    if panel_3_count > 0:
-                        breakdown_parts.append(f"{panel_3_count}x 3\"")
-                    if panel_5_5_count > 0:
-                        breakdown_parts.append(f"{panel_5_5_count}x 5.5\"")
-                    panel_breakdown = " + ".join(breakdown_parts) if breakdown_parts else "None"
-                    st.metric("Panels", f"{total_panels}", panel_breakdown)
-                
-                with col2:
-                    st.metric("Cost", f"${total_cost}", f"${budget_remaining} budget remaining")
-                
-                with col3:
-                    current_avg = np.mean(list(self.current_conditions["rt60_by_freq"].values()))
-                    new_avg = np.mean(list(new_rt60.values()))
-                    st.metric("Avg RT60", f"{new_avg:.2f}s", f"{((current_avg - new_avg) / current_avg * 100):.1f}% improvement")
-                
-                with col4:
-                    st.metric("Predicted STI", f"{predicted_sti:.2f}", f"{((predicted_sti - 0.67) / 0.67 * 100):.1f}% improvement")
+            predicted_sti = self.calculate_sti_improvement(avg_rt60_improvement)
+            
+            # Summary metrics
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                breakdown_parts = []
+                if panel_2_count > 0:
+                    breakdown_parts.append(f"{panel_2_count}x 2\"")
+                if panel_3_count > 0:
+                    breakdown_parts.append(f"{panel_3_count}x 3\"")
+                if panel_5_5_count > 0:
+                    breakdown_parts.append(f"{panel_5_5_count}x 5.5\"")
+                panel_breakdown = " + ".join(breakdown_parts) if breakdown_parts else "None"
+                st.metric("Panels", f"{total_panels}", panel_breakdown)
+            
+            with col2:
+                st.metric("Cost", f"${total_cost}", f"${budget_remaining} budget remaining")
+            
+            with col3:
+                current_avg = np.mean(list(self.current_conditions["rt60_by_freq"].values()))
+                new_avg = np.mean(list(new_rt60.values()))
+                st.metric("Avg RT60", f"{new_avg:.2f}s", f"{((current_avg - new_avg) / current_avg * 100):.1f}% improvement")
+            
+            with col4:
+                st.metric("Predicted STI", f"{predicted_sti:.2f}", f"{((predicted_sti - 0.67) / 0.67 * 100):.1f}% improvement")
+            
+            # Add spacing between Treatment Summary and detailed sections
+            st.markdown("<br><br>", unsafe_allow_html=True)
         
         # Detailed recommendations and cost breakdown (always visible)
         if total_panels > 0:
@@ -884,10 +910,9 @@ class TreatmentSimulator:
                 st.write(f"- Total coverage: {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
             
             with detail_col2:
-                st.subheader("Cost Breakdown")
+                st.subheader("Panel Costs")
                 
-                # Panel costs breakdown
-                st.markdown("**Panel Costs:**")
+                # Panel costs breakdown (no subheading)
                 if panel_5_5_count > 0:
                     st.write(f"• {panel_5_5_count}x 5.5\" @ $30 ea: **${cost_5_5_inch}**")
                 if panel_3_count > 0:
@@ -908,33 +933,11 @@ class TreatmentSimulator:
                 st.write(f"• Mounting hardware: **${hardware_cost}**")
                 st.write(f"• Acoustic fabric: **${fabric_cost}**")
                 
-                total_with_extras = total_cost + labor_cost + hardware_cost + fabric_cost
-                
-                st.markdown("---")
-                st.markdown(f"**Total Project: ${total_with_extras}**")
-                
-                # Budget analysis
-                if total_with_extras <= 1200:
-                    st.success(f"✅ Within ${1200} budget\n\nRemaining: ${1200 - total_with_extras}")
-                elif total_cost <= 1200:
-                    st.warning(f"⚠️ Panels fit budget, but total project exceeds by ${total_with_extras - 1200}")
-                else:
-                    st.error(f"❌ Over budget by ${total_with_extras - 1200}")
-                
-                # Cost per performance metrics
-                st.markdown("---")
-                st.markdown("**Cost Efficiency:**")
-                cost_per_panel = total_with_extras / total_panels if total_panels > 0 else 0
-                rt60_improvement_per_dollar = (avg_rt60_improvement / total_with_extras * 100) if total_with_extras > 0 else 0
-                
-                st.write(f"• ${cost_per_panel:.0f} per panel (all-in)")
-                st.write(f"• {rt60_improvement_per_dollar:.2f}% RT60 improvement per $100")
-                
                 # Tax note
                 st.markdown("---")
                 st.caption("*All prices in CAD before HST (13%)")
-                hst_amount = total_with_extras * 0.13
-                total_with_tax = total_with_extras + hst_amount
+                hst_amount = (total_cost + labor_cost + hardware_cost + fabric_cost) * 0.13
+                total_with_tax = (total_cost + labor_cost + hardware_cost + fabric_cost) + hst_amount
                 st.caption(f"Total with HST: ${total_with_tax:.0f}")
 
 if __name__ == "__main__":
