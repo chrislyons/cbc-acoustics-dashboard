@@ -17,12 +17,8 @@ class TreatmentSimulator:
     def __init__(self):
         self.base_path = Path('/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard')
         
-        # Load drape compensation data from CSV
-        self.drape_data = self._load_drape_data()
-        
-        # Studio 8 room parameters
-        self.room_volume = 2650  # cubic feet
-        self.room_surface_area = 1847  # square feet (calculated from dimensions)
+        # Load default space data (will be updated in render method)
+        self._load_space_parameters("Studio 8")
         
         # Panel specifications
         self.panel_specs = {
@@ -70,10 +66,12 @@ class TreatmentSimulator:
             "rt60_range": [0.3, 0.5]
         }
     
-    def _load_drape_data(self):
+    def _load_drape_data(self, space="Studio 8"):
         """Load drape compensation data from CSV file"""
         try:
-            drape_file = self.base_path / "data/generated/250728-Studio8-Drape_Compensation_Evidence.csv"
+            # Determine space-specific file
+            space_id = "Studio8" if space == "Studio 8" else "TheHub"
+            drape_file = self.base_path / f"data/generated/250728-{space_id}-Drape_Compensation_Evidence.csv"
             if drape_file.exists():
                 drape_df = pd.read_csv(drape_file)
                 # Convert to dictionary format for easy lookup
@@ -122,6 +120,51 @@ class TreatmentSimulator:
             }
         
         return equivalents
+    
+    def _load_space_parameters(self, space="Studio 8"):
+        """Load space-specific room parameters and RT60 data"""
+        if space == "The Hub":
+            # The Hub parameters (hexagonal space)
+            self.room_volume = 1900  # cubic feet (estimated)
+            self.room_surface_area = 1400  # square feet (estimated)
+            
+            # The Hub RT60 data (different acoustic characteristics)
+            self.current_conditions = {
+                "rt60_by_freq": {
+                    125: 0.72, 250: 0.78, 500: 0.65, 1000: 0.58, 2000: 0.52, 4000: 0.48
+                },
+                "sti_by_position": {
+                    "Back Corner": 0.73,
+                    "Ceiling Corner": 0.68,
+                    "Chair 1": 0.75,
+                    "Chair 2": 0.71,
+                    "Mid Room": 0.69
+                },
+                "average_sti": 0.71,
+                "average_rt60": 0.62
+            }
+        else:
+            # Studio 8 parameters (default)
+            self.room_volume = 2650  # cubic feet
+            self.room_surface_area = 1847  # square feet
+            
+            # Studio 8 RT60 data (from analysis)
+            self.current_conditions = {
+                "rt60_by_freq": {
+                    125: 0.85, 250: 0.92, 500: 0.78, 1000: 0.71, 2000: 0.68, 4000: 0.55
+                },
+                "sti_by_position": {
+                    "Host A (Reference)": 0.95,
+                    "Host C (Talent)": 0.67,
+                    "Mid Room": 0.71,
+                    "NE Corner": 0.58,
+                    "SE Corner": 0.62,
+                    "Ceiling": 0.64
+                },
+                "average_sti": 0.67,
+                "average_rt60": 0.75
+            }
+    
     
     def _get_absorption_curve(self, thickness):
         """Get frequency-dependent absorption coefficients"""
@@ -572,60 +615,81 @@ class TreatmentSimulator:
         
         return fig
     
-    def render_treatment_simulator(self):
+    def render_treatment_simulator(self, space="Studio 8"):
         """Main rendering function for treatment simulator"""
         
-        st.info("**Interactive Panel Selection:** Build your acoustic treatment package by selecting quantities of different panel thicknesses. See real-time acoustic impact and cost calculations.")
+        # Show space-specific info
+        if space == "The Hub":
+            st.info("**Interactive Panel Planning:** Build your acoustic treatment package for The Hub. Note: Currently showing Studio 8 data as baseline - Hub-specific calculations coming soon.")
+        else:
+            st.info("**Interactive Panel Planning:** Build your acoustic treatment package by selecting quantities of different panel thicknesses. See real-time acoustic impact and cost calculations.")
+        
+        # Load space-specific data
+        self._load_space_parameters(space)
+        self.drape_data = self._load_drape_data(space)
         
         # Control panel
         col1, col2 = st.columns([1, 2])
         
         with col1:
-            st.subheader("Panel Selection")
+            st.subheader("Panel Planning")
             
-            # Drape removal consideration with enhanced focus
-            st.markdown("**Drape Impact Analysis**")
-            drape_removal = st.checkbox(
-                "Account for Lighting Grid Drape Removal",
-                value=True
-            )
-            
-            if drape_removal:
-                # Calculate equivalent panels for integrated message
-                equivalent_panels = self._calculate_equivalent_panels()
-                st.warning(f"**Drape Removal Impact:** Removing the velvet drape will increase reverberation, especially in mid-frequencies. "
-                          f"Your panel selection compensates for this. **Equivalent compensation:** ~{equivalent_panels['3_inch']['count']} × 3\" panels "
-                          f"(${equivalent_panels['3_inch']['cost']}) *or* ~{equivalent_panels['5_5_inch']['count']} × 5.5\" panels "
-                          f"(${equivalent_panels['5_5_inch']['cost']}) needed to offset drape removal.")
+            # Drape removal consideration - only for Studio 8
+            if space == "Studio 8":
+                st.markdown("**Drape Impact Analysis**")
+                drape_removal = st.checkbox(
+                    "Account for Lighting Grid Drape Removal",
+                    value=True
+                )
+                
+                if drape_removal:
+                    # Calculate equivalent panels for integrated message
+                    equivalent_panels = self._calculate_equivalent_panels()
+                    st.warning(f"**Drape Removal Impact:** Removing the velvet drape will increase reverberation, especially in mid-frequencies. "
+                              f"Your panel selection compensates for this.\n\n"
+                              f"**Equivalent compensation:** 4 x 3\" panels OR 3 x 5.5\" panels needed to offset drape removal.")
+                else:
+                    st.info("**Drape Retained:** Calculations assume the lighting grid drape remains in place.")
+                
+                st.markdown("---")
             else:
-                st.info("**Drape Retained:** Calculations assume the lighting grid drape remains in place.")
+                # For The Hub, no drape to remove
+                drape_removal = False
             
-            st.markdown("---")
-            
-            # Initialize session state for panel counts
-            if 'panel_2_inch' not in st.session_state:
-                st.session_state.panel_2_inch = 4
-            if 'panel_3_inch' not in st.session_state:
-                st.session_state.panel_3_inch = 8
-            if 'panel_5_5_inch' not in st.session_state:
-                st.session_state.panel_5_5_inch = 14
+            # Initialize session state for panel counts - space-specific defaults
+            if space == "Studio 8":
+                # Studio 8 defaults: 25 total panels (4 + 8 + 13 = 25)
+                if 'panel_2_inch' not in st.session_state:
+                    st.session_state.panel_2_inch = 4
+                if 'panel_3_inch' not in st.session_state:
+                    st.session_state.panel_3_inch = 8
+                if 'panel_5_5_inch' not in st.session_state:
+                    st.session_state.panel_5_5_inch = 13
+            else:
+                # The Hub defaults: 10 total panels (2 + 3 + 5 = 10)
+                if 'panel_2_inch' not in st.session_state:
+                    st.session_state.panel_2_inch = 2
+                if 'panel_3_inch' not in st.session_state:
+                    st.session_state.panel_3_inch = 3
+                if 'panel_5_5_inch' not in st.session_state:
+                    st.session_state.panel_5_5_inch = 5
             
             # Shopping cart style selectors - horizontal layout
-            st.markdown("**Panels (Mineral Wool, Pine Framing, Hardware, Fabric)**")
-            col_2, col_3, col_5 = st.columns(3)
+            st.markdown("**Panels (Mineral Wool, Framing, Hardware, Fabric)**")
+            col_5, col_3, col_2 = st.columns(3)
             
-            with col_2:
-                st.markdown("**2\" @ $20 ea.**")
-                panel_2_count = st.number_input(
+            with col_5:
+                st.markdown("**5.5\" @ $30 ea.**")
+                panel_5_5_count = st.number_input(
                     "Qty:",
                     min_value=0,
                     max_value=50,
-                    value=st.session_state.panel_2_inch,
+                    value=st.session_state.panel_5_5_inch,
                     step=1,
-                    key="panel_2_input",
-                    help="Budget option for high-frequency absorption (1kHz+)"
+                    key="panel_5_5_input",
+                    help="Excellent broadband absorption, especially low frequencies (125Hz+)"
                 )
-                st.session_state.panel_2_inch = panel_2_count
+                st.session_state.panel_5_5_inch = panel_5_5_count
             
             with col_3:
                 st.markdown("**3\" @ $25 ea.**")
@@ -640,18 +704,18 @@ class TreatmentSimulator:
                 )
                 st.session_state.panel_3_inch = panel_3_count
             
-            with col_5:
-                st.markdown("**5.5\" @ $30 ea.**")
-                panel_5_5_count = st.number_input(
+            with col_2:
+                st.markdown("**2\" @ $20 ea.**")
+                panel_2_count = st.number_input(
                     "Qty:",
                     min_value=0,
                     max_value=50,
-                    value=st.session_state.panel_5_5_inch,
+                    value=st.session_state.panel_2_inch,
                     step=1,
-                    key="panel_5_5_input",
-                    help="Excellent broadband absorption, especially low frequencies (125Hz+)"
+                    key="panel_2_input",
+                    help="Budget option for high-frequency absorption (1kHz+)"
                 )
-                st.session_state.panel_5_5_inch = panel_5_5_count
+                st.session_state.panel_2_inch = panel_2_count
             
             # Create panel counts dictionary
             panel_counts = {
@@ -672,12 +736,12 @@ class TreatmentSimulator:
             st.markdown("---")
             st.subheader("Cart Summary")
             if total_panels > 0:
-                if panel_2_count > 0:
-                    st.write(f"• {panel_2_count}x 2\" panels: ${cost_2_inch}")
-                if panel_3_count > 0:
-                    st.write(f"• {panel_3_count}x 3\" panels: ${cost_3_inch}")
                 if panel_5_5_count > 0:
                     st.write(f"• {panel_5_5_count}x 5.5\" panels: ${cost_5_5_inch}")
+                if panel_3_count > 0:
+                    st.write(f"• {panel_3_count}x 3\" panels: ${cost_3_inch}")
+                if panel_2_count > 0:
+                    st.write(f"• {panel_2_count}x 2\" panels: ${cost_2_inch}")
                 
                 st.markdown(f"**Total: {total_panels} panels for ${total_cost} before HST**")
                 
@@ -693,18 +757,12 @@ class TreatmentSimulator:
             tab1, tab2, tab3 = st.tabs(["Before/After", "Effectiveness", "Cost-Benefit"])
             
             with tab1:
-                if total_panels > 0:
-                    fig_comparison = self.create_before_after_comparison(panel_counts, drape_removal)
-                    st.plotly_chart(fig_comparison, use_container_width=True)
-                else:
-                    st.info("Select panels to see before/after comparison")
+                fig_comparison = self.create_before_after_comparison(panel_counts, drape_removal)
+                st.plotly_chart(fig_comparison, use_container_width=True)
             
             with tab2:
-                if total_panels > 0:
-                    fig_effectiveness = self.create_treatment_effectiveness_chart(panel_counts, drape_removal)
-                    st.plotly_chart(fig_effectiveness, use_container_width=True)
-                else:
-                    st.info("Select panels to see effectiveness analysis")
+                fig_effectiveness = self.create_treatment_effectiveness_chart(panel_counts, drape_removal)
+                st.plotly_chart(fig_effectiveness, use_container_width=True)
             
             with tab3:
                 fig_cost_benefit = self.create_cost_benefit_analysis()
@@ -754,73 +812,130 @@ class TreatmentSimulator:
                 with col4:
                     st.metric("Predicted STI", f"{predicted_sti:.2f}", f"{((predicted_sti - 0.67) / 0.67 * 100):.1f}% improvement")
         
-        # Detailed recommendations (always visible)
+        # Detailed recommendations and cost breakdown (always visible)
         if total_panels > 0:
-            st.subheader("Detailed Recommendations")
-            new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
-            avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
-                                    np.mean(list(new_rt60.values()))) / 
-                                   np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
-            predicted_sti = self.calculate_sti_improvement(avg_rt60_improvement)
+            detail_col1, detail_col2 = st.columns([2, 1])
             
-            st.write("**Optimal Panel Placement:**")
+            with detail_col1:
+                st.subheader("Detailed Recommendations")
+                new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
+                avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
+                                        np.mean(list(new_rt60.values()))) / 
+                                       np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
+                predicted_sti = self.calculate_sti_improvement(avg_rt60_improvement)
+                
+                st.write("**Optimal Panel Placement:**")
+                
+                if total_panels <= 8:
+                    st.write("- **Phase 1 (Minimal Treatment):** Basic drape compensation")
+                    st.write("  • 4-6 panels: Ceiling-mounted above lighting grid (center area)")
+                    st.write("  • 2-4 panels: Corner ceiling positions for modal control")
+                    st.write("  • Focus: Compensate for drape removal impact")
+                elif total_panels <= 16:
+                    st.write("- **Phase 2 (Essential Treatment):** Foundation acoustics")
+                    st.write("  • 4 panels: Corner bass traps (straddle-mount, above grid)")
+                    st.write("  • 6-8 panels: Center ceiling treatment (primary reflection zone)")
+                    st.write("  • 4 panels: North/South/East/West midpoint ceiling positions")
+                    st.write("  • Focus: Modal control + primary reflection management")
+                elif total_panels <= 24:
+                    st.write("- **Phase 3 (Comprehensive Treatment):** Professional standard")
+                    st.write("  • 4 panels: Corner bass traps (5.5\" recommended)")
+                    st.write("  • 8 panels: Ceiling treatment grid (above lighting)")
+                    st.write("  • 6 panels: First reflection points (side walls, mid-height)")
+                    st.write("  • 4-6 panels: North wall (off-camera positions)")
+                    st.write("  • Focus: Broadcast-quality speech intelligibility")
+                elif total_panels <= 35:
+                    st.write("- **Phase 4 (Enhanced Treatment):** Premium acoustics")
+                    st.write("  • 6 panels: Enhanced corner bass traps (double thickness)")
+                    st.write("  • 10-12 panels: Complete ceiling grid coverage")
+                    st.write("  • 8 panels: Wall first reflection points")
+                    st.write("  • 6 panels: Secondary reflection control (rear wall)")
+                    st.write("  • 4 panels: Fine-tuning positions")
+                    st.write("  • Focus: Exceptional clarity across all positions")
+                else:
+                    st.write("- **Phase 5 (Maximum Treatment):** Studio reference standard")
+                    st.write("  • 8 panels: Triple corner bass trap system")
+                    st.write("  • 15+ panels: Complete lighting absorption field")
+                    st.write("  • 10+ panels: Comprehensive wall treatment")
+                    st.write("  • Remaining panels: Custom problem area targeting")
+                    st.write("  • Focus: Reference-grade acoustic environment")
+                
+                # Panel type recommendations
+                max_count = max(panel_2_count, panel_3_count, panel_5_5_count)
+                if panel_5_5_count == max_count and panel_5_5_count > 0:
+                    st.write("\n**Panel Planning:** Excellent choice prioritizing 5.5\" panels for broadband absorption.")
+                elif panel_3_count == max_count and panel_3_count > 0:
+                    st.write("\n**Panel Planning:** Good mid-high frequency focus with 3\" panels. Consider more 5.5\" for low-frequency control.")
+                elif panel_2_count == max_count and panel_2_count > 0:
+                    st.write("\n**Panel Planning:** Budget-conscious approach with 2\" panels. Great for high frequencies, but consider thicker panels for bass control.")
+                else:
+                    st.write("\n**Panel Planning:** Balanced mix of panel thicknesses for comprehensive frequency coverage.")
+                
+                # Drape-specific guidance
+                if drape_removal:
+                    st.write("\n**Drape Impact:** Your panel count compensates for drape removal. Priority: ceiling panels above grid area.")
+                else:
+                    st.write("\n**Drape Retained:** Existing drape provides some mid-frequency absorption. Focus panels on corners and walls.")
+                
+                st.write(f"\n**Expected Results:**")
+                st.write(f"- RT60 reduction: {avg_rt60_improvement:.1f}% average")
+                st.write(f"- STI improvement: {((predicted_sti - 0.67) / 0.67 * 100):.1f}%")
+                st.write(f"- Speech clarity: {'Excellent' if predicted_sti > 0.75 else 'Good' if predicted_sti > 0.6 else 'Fair'}")
+                st.write(f"- Total coverage: {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
             
-            if total_panels <= 8:
-                st.write("- **Phase 1 (Minimal Treatment):** Basic drape compensation")
-                st.write("  • 4-6 panels: Ceiling-mounted above lighting grid (center area)")
-                st.write("  • 2-4 panels: Corner ceiling positions for modal control")
-                st.write("  • Focus: Compensate for drape removal impact")
-            elif total_panels <= 16:
-                st.write("- **Phase 2 (Essential Treatment):** Foundation acoustics")
-                st.write("  • 4 panels: Corner bass traps (straddle-mount, above grid)")
-                st.write("  • 6-8 panels: Center ceiling treatment (primary reflection zone)")
-                st.write("  • 4 panels: North/South/East/West midpoint ceiling positions")
-                st.write("  • Focus: Modal control + primary reflection management")
-            elif total_panels <= 24:
-                st.write("- **Phase 3 (Comprehensive Treatment):** Professional standard")
-                st.write("  • 4 panels: Corner bass traps (5.5\" recommended)")
-                st.write("  • 8 panels: Ceiling treatment grid (above lighting)")
-                st.write("  • 6 panels: First reflection points (side walls, mid-height)")
-                st.write("  • 4-6 panels: North wall (off-camera positions)")
-                st.write("  • Focus: Broadcast-quality speech intelligibility")
-            elif total_panels <= 35:
-                st.write("- **Phase 4 (Enhanced Treatment):** Premium acoustics")
-                st.write("  • 6 panels: Enhanced corner bass traps (double thickness)")
-                st.write("  • 10-12 panels: Complete ceiling grid coverage")
-                st.write("  • 8 panels: Wall first reflection points")
-                st.write("  • 6 panels: Secondary reflection control (rear wall)")
-                st.write("  • 4 panels: Fine-tuning positions")
-                st.write("  • Focus: Exceptional clarity across all positions")
-            else:
-                st.write("- **Phase 5 (Maximum Treatment):** Studio reference standard")
-                st.write("  • 8 panels: Triple corner bass trap system")
-                st.write("  • 15+ panels: Complete ceiling absorption field")
-                st.write("  • 10+ panels: Comprehensive wall treatment")
-                st.write("  • Remaining panels: Custom problem area targeting")
-                st.write("  • Focus: Reference-grade acoustic environment")
-            
-            # Panel type recommendations
-            max_count = max(panel_2_count, panel_3_count, panel_5_5_count)
-            if panel_5_5_count == max_count and panel_5_5_count > 0:
-                st.write("\n**Panel Selection:** Excellent choice prioritizing 5.5\" panels for broadband absorption.")
-            elif panel_3_count == max_count and panel_3_count > 0:
-                st.write("\n**Panel Selection:** Good mid-high frequency focus with 3\" panels. Consider more 5.5\" for low-frequency control.")
-            elif panel_2_count == max_count and panel_2_count > 0:
-                st.write("\n**Panel Selection:** Budget-conscious approach with 2\" panels. Great for high frequencies, but consider thicker panels for bass control.")
-            else:
-                st.write("\n**Panel Selection:** Balanced mix of panel thicknesses for comprehensive frequency coverage.")
-            
-            # Drape-specific guidance
-            if drape_removal:
-                st.write("\n**Drape Impact:** Your panel count compensates for drape removal. Priority: ceiling panels above grid area.")
-            else:
-                st.write("\n**Drape Retained:** Existing drape provides some mid-frequency absorption. Focus panels on corners and walls.")
-            
-            st.write(f"\n**Expected Results:**")
-            st.write(f"- RT60 reduction: {avg_rt60_improvement:.1f}% average")
-            st.write(f"- STI improvement: {((predicted_sti - 0.67) / 0.67 * 100):.1f}%")
-            st.write(f"- Speech clarity: {'Excellent' if predicted_sti > 0.75 else 'Good' if predicted_sti > 0.6 else 'Fair'}")
-            st.write(f"- Total coverage: {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
+            with detail_col2:
+                st.subheader("Cost Breakdown")
+                
+                # Panel costs breakdown
+                st.markdown("**Panel Costs:**")
+                if panel_5_5_count > 0:
+                    st.write(f"• {panel_5_5_count}x 5.5\" @ $30 ea: **${cost_5_5_inch}**")
+                if panel_3_count > 0:
+                    st.write(f"• {panel_3_count}x 3\" @ $25 ea: **${cost_3_inch}**")
+                if panel_2_count > 0:
+                    st.write(f"• {panel_2_count}x 2\" @ $20 ea: **${cost_2_inch}**")
+                
+                st.markdown("---")
+                st.markdown(f"**Subtotal: ${total_cost}**")
+                
+                # Additional costs
+                st.markdown("**Additional Costs:**")
+                labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
+                hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
+                fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
+                
+                st.write(f"• Installation labor: **${labor_cost}**")
+                st.write(f"• Mounting hardware: **${hardware_cost}**")
+                st.write(f"• Acoustic fabric: **${fabric_cost}**")
+                
+                total_with_extras = total_cost + labor_cost + hardware_cost + fabric_cost
+                
+                st.markdown("---")
+                st.markdown(f"**Total Project: ${total_with_extras}**")
+                
+                # Budget analysis
+                if total_with_extras <= 1200:
+                    st.success(f"✅ Within ${1200} budget\n\nRemaining: ${1200 - total_with_extras}")
+                elif total_cost <= 1200:
+                    st.warning(f"⚠️ Panels fit budget, but total project exceeds by ${total_with_extras - 1200}")
+                else:
+                    st.error(f"❌ Over budget by ${total_with_extras - 1200}")
+                
+                # Cost per performance metrics
+                st.markdown("---")
+                st.markdown("**Cost Efficiency:**")
+                cost_per_panel = total_with_extras / total_panels if total_panels > 0 else 0
+                rt60_improvement_per_dollar = (avg_rt60_improvement / total_with_extras * 100) if total_with_extras > 0 else 0
+                
+                st.write(f"• ${cost_per_panel:.0f} per panel (all-in)")
+                st.write(f"• {rt60_improvement_per_dollar:.2f}% RT60 improvement per $100")
+                
+                # Tax note
+                st.markdown("---")
+                st.caption("*All prices in CAD before HST (13%)")
+                hst_amount = total_with_extras * 0.13
+                total_with_tax = total_with_extras + hst_amount
+                st.caption(f"Total with HST: ${total_with_tax:.0f}")
 
 if __name__ == "__main__":
     simulator = TreatmentSimulator()

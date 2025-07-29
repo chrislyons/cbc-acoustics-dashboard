@@ -31,15 +31,12 @@ except ImportError as e:
 # Simplified CSS without problematic transitions and transforms
 DASHBOARD_CSS = """
 <style>
-    /* Force light mode - override Streamlit's dark mode */
-    .stApp {
-        background-color: #ffffff !important;
-        color: #333333 !important;
-    }
+    /* Import Inter font from Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    [data-theme="dark"], [data-testid="stSidebar"][data-theme="dark"] {
-        background-color: #ffffff !important;
-        color: #333333 !important;
+    /* Global font family override */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     }
     
     /* Simplified styling without animations */
@@ -255,7 +252,7 @@ class AcousticDashboard:
         # Header
         st.markdown("""
         <div class="main-header">
-            <h1>CBC Sports 8th Floor Acoustic Analysis Dashboard</h1>
+            <h1>CBC Sports 8th Floor Acoustics Dashboard</h1>
             <p>Interactive visualization of Studio 8 & Hub acoustic treatment analysis</p>
         </div>
         """, unsafe_allow_html=True)
@@ -293,6 +290,9 @@ class AcousticDashboard:
                 st.session_state.cached_3d_fig = None
             if hasattr(st.session_state, 'cached_rt60_fig'):
                 st.session_state.cached_rt60_fig = None
+            # Reset panel count to space-appropriate default
+            default_count = 10 if selected_space == "The Hub" else 25
+            st.session_state.panel_count = default_count
             # Force rerun to refresh all components
             st.rerun()
         
@@ -367,39 +367,72 @@ class AcousticDashboard:
             return
         
         # Calculate key metrics from actual data
-        avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
-        worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
         total_panels = treatment_data['recommended_panels'].apply(lambda x: int(x.split('-')[1].split()[0])).sum()
         estimated_cost = total_panels * 30  # $30 per panel estimate
+        
+        # STI data handling - only available for Studio 8
+        if space == "Studio 8":
+            avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
+            worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
+        else:
+            # The Hub - no STI data was recorded
+            avg_sti_degradation = None
+            worst_position = None
         
         # Critical metrics row
         col1, col2, col3, col4 = st.columns(4)
         
         # Dynamic metrics based on actual data
         with col1:
-            sti_status = "critical-metric" if avg_sti_degradation > 20 else "warning-metric" if avg_sti_degradation > 10 else "good-metric"
-            sti_icon = "🔴" if avg_sti_degradation > 20 else "⚠️" if avg_sti_degradation > 10 else "✅"
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">{sti_icon} STI DEGRADATION</div>
-                <div class="metric-value {sti_status}">{avg_sti_degradation:.1f}%</div>
-                <p>Average across positions</p>
-                <div class="metric-subtitle">Target: &lt;15%</div>
-            </div>
-            """, unsafe_allow_html=True)
+            if space == "Studio 8" and avg_sti_degradation is not None:
+                sti_status = "critical-metric" if avg_sti_degradation > 20 else "warning-metric" if avg_sti_degradation > 10 else "good-metric"
+                sti_icon = "🔴" if avg_sti_degradation > 20 else "⚠️" if avg_sti_degradation > 10 else "✅"
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">{sti_icon} STI DEGRADATION</div>
+                    <div class="metric-value {sti_status}">{avg_sti_degradation:.1f}%</div>
+                    <p>Average across positions</p>
+                    <div class="metric-subtitle">Target: &lt;15%</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # The Hub - no STI data
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">📊 STI DATA</div>
+                    <div class="metric-value warning-metric">No Data</div>
+                    <p>STI not recorded for The Hub</p>
+                    <div class="metric-subtitle">RT60 analysis available</div>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col2:
-            worst_pos_name = worst_position['position']
-            worst_degradation = worst_position['sti_degradation_percent']
-            worst_status = "critical-metric" if worst_degradation > 25 else "warning-metric"
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">📍 WORST POSITION</div>
-                <div class="metric-value {worst_status}">{worst_pos_name}</div>
-                <p>{worst_degradation:.1f}% STI degradation</p>
-                <div class="metric-subtitle">Needs priority treatment</div>
-            </div>
-            """, unsafe_allow_html=True)
+            if space == "Studio 8" and worst_position is not None:
+                worst_pos_name = worst_position['position']
+                worst_degradation = worst_position['sti_degradation_percent']
+                worst_status = "critical-metric" if worst_degradation > 25 else "warning-metric"
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">📍 WORST POSITION</div>
+                    <div class="metric-value {worst_status}">{worst_pos_name}</div>
+                    <p>{worst_degradation:.1f}% STI degradation</p>
+                    <div class="metric-subtitle">Needs priority treatment</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # The Hub - show RT60 based worst position instead
+                worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
+                worst_rt60_name = worst_rt60_pos['position']
+                worst_rt60_increase = worst_rt60_pos['RT60_500Hz_increase_percent']
+                rt60_status = "critical-metric" if worst_rt60_increase > 50 else "warning-metric"
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">📍 WORST POSITION</div>
+                    <div class="metric-value {rt60_status}">{worst_rt60_name}</div>
+                    <p>{worst_rt60_increase:.1f}% RT60 increase</p>
+                    <div class="metric-subtitle">Needs priority treatment</div>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col3:
             cost_status = "good-metric" if estimated_cost <= 1200 else "warning-metric"
@@ -457,7 +490,6 @@ class AcousticDashboard:
     
     def render_3d_model(self, space, selected_preset=None):
         """Render 3D room model with RT60 heatmap"""
-        st.header(f"{space} 3D Room Model & RT60 Analysis")
         
         # Initialize session state for camera view persistence and 3D model caching
         if "camera_view" not in st.session_state:
@@ -482,40 +514,26 @@ class AcousticDashboard:
             st.info("🎯 **Interactive 3D Model:** Rotate, zoom, and click on measurement positions to explore the acoustic space")
         
         with header_col2:
-            # Panel count input with +/- buttons (same as Frequency Analysis page)
-            st.markdown("**Panel Count**")
-            col_minus, col_input, col_plus = st.columns([0.5, 2, 0.5])
+            # Initialize panel count in session state with space-specific defaults
+            if 'panel_count' not in st.session_state:
+                default_count = 10 if space == "The Hub" else 25
+                st.session_state.panel_count = default_count
             
-            with col_minus:
-                if st.button("➖", key="3d_panel_minus", help="Decrease panel count"):
-                    st.session_state.panel_count = max(0, st.session_state.panel_count - 1)
-                    # Add small delay to prevent rapid clicking
-                    import time
-                    time.sleep(0.1)
-            
-            with col_input:
-                # Editable number input
-                current_panel_count = st.number_input(
-                    label="3D Panel Count Input",
-                    min_value=0,
-                    max_value=40,
-                    value=st.session_state.panel_count,
-                    step=1,
-                    label_visibility="collapsed",
-                    key="3d_panel_number_input",
-                    help="Enter panel count directly or use +/- buttons"
-                )
-                # Update session state with typed value
-                st.session_state.panel_count = current_panel_count
-            
-            with col_plus:
-                if st.button("➕", key="3d_panel_plus", help="Increase panel count"):
-                    st.session_state.panel_count = min(40, st.session_state.panel_count + 1)
-                    # Add small delay to prevent rapid clicking
-                    import time
-                    time.sleep(0.1)
-        
-        st.markdown("---")
+            # Panel count text input only (matching Frequency Analysis page style)
+            current_panel_count = st.number_input(
+                label="Panel Count",
+                min_value=0,
+                max_value=40,
+                value=st.session_state.panel_count,
+                step=1,
+                key="3d_panel_number_input",
+                help="Enter panel count directly"
+            )
+            # Add delay for smoothness
+            import time
+            time.sleep(0.05)
+            # Update session state with typed value
+            st.session_state.panel_count = current_panel_count
         
         # Store current panel count for use in visualization
         panel_count = st.session_state.panel_count
@@ -526,12 +544,19 @@ class AcousticDashboard:
         with viz_col1:
             st.subheader("3D Room Model")
             
-            if space == "Studio 8" and self.visualizer_3d:
+            if self.visualizer_3d:
                 # Only regenerate 3D model if panel count changed or no cached version exists
                 if (st.session_state.cached_3d_fig is None or 
                     st.session_state.last_panel_count_3d != panel_count):
                     
-                    fig = self.visualizer_3d.create_studio8_detailed_model(show_panels=True, panel_count=panel_count)
+                    if space == "Studio 8":
+                        fig = self.visualizer_3d.create_studio8_detailed_model(show_panels=True, panel_count=panel_count)
+                    elif space == "The Hub":
+                        fig = self.visualizer_3d.create_hub_detailed_model(show_panels=True, panel_count=panel_count)
+                    else:
+                        st.write(f"3D model not available for {space}")
+                        return
+                        
                     st.session_state.cached_3d_fig = fig
                     st.session_state.last_panel_count_3d = panel_count
                     # Update revision ID when model actually changes
@@ -587,6 +612,19 @@ class AcousticDashboard:
                 
                 # RT60 analysis summary
                 self.render_rt60_summary(panel_count)
+            elif space == "The Hub":
+                st.info("📊 **RT60 Heatmap for The Hub**")
+                st.markdown("""
+                **RT60 Analysis Coming Soon**
+                
+                The Hub's hexagonal geometry with irregular angles (88° and 38°) creates unique acoustic challenges:
+                
+                - Complex reflection patterns from non-parallel surfaces
+                - Modal frequencies influenced by hexagonal dimensions  
+                - Treatment optimization requires specialized analysis
+                
+                **Current Status**: 3D model available, RT60 heatmap analysis in development
+                """)
             else:
                 st.write("RT60 analysis not available")
     
@@ -629,69 +667,45 @@ class AcousticDashboard:
             status_color = "#f39c12"
             recommendation = "Approaching green zones"
         
-        # Create organized metrics table
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95));
-            border: 2px solid {status_color};
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        ">
-            <div style="text-align: center; margin-bottom: 1rem;">
-                <h4 style="color: {status_color}; margin: 0; font-size: 1.1rem;">{status}</h4>
-                <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9rem;">{recommendation}</p>
-            </div>
-            
-            <table style="
-                width: 100%; 
-                border-collapse: collapse; 
-                font-family: 'SF Pro Display', -apple-system, sans-serif;
-                background: rgba(255, 255, 255, 0.8);
-                border-radius: 8px;
-                overflow: hidden;
-            ">
-                <thead>
-                    <tr style="background: linear-gradient(90deg, {status_color}15, {status_color}08);">
-                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid {status_color}20;">Metric</th>
-                        <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #333; border-bottom: 2px solid {status_color}20;">Value</th>
-                        <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #333; border-bottom: 2px solid {status_color}20;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 0.5rem 0.75rem; font-weight: 500;">Average RT60</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center; font-weight: bold; font-size: 1.1rem;">{avg_rt60:.2f}s</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center;">
-                            {"✅ Good" if target_min <= avg_rt60 <= target_max else "⚠️ Adjust" if avg_rt60 > target_max else "🔍 Monitor"}
-                        </td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 0.5rem 0.75rem; font-weight: 500;">Range</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center; font-weight: bold;">{min_rt60:.2f}s - {max_rt60:.2f}s</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center;">
-                            {"✅ Tight" if (max_rt60 - min_rt60) < 0.2 else "⚠️ Variable"}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 0.5rem 0.75rem; font-weight: 500;">In Target Range</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center; font-weight: bold; color: {status_color};">{target_percentage:.0f}%</td>
-                        <td style="padding: 0.5rem 0.75rem; text-align: center;">
-                            {"🎯 Excellent" if target_percentage >= 80 else "📈 Improving" if target_percentage >= 60 else "🔧 Work Needed"}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 0.75rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.5); border-radius: 6px; border-left: 4px solid {status_color};">
-                <small style="color: #666; font-weight: 500;">
-                    <strong>Target:</strong> 0.3-0.5s for broadcast quality | 
-                    <strong>Panel Count:</strong> {panel_count} panels
-                </small>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Use Streamlit native components instead of complex HTML
+        # Status header
+        st.markdown(f"""<div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95)); border: 2px solid {status_color}; border-radius: 12px; margin: 1rem 0;">
+        <h4 style="color: {status_color}; margin: 0;">{status}</h4>
+        <p style="margin: 0.25rem 0 0 0; color: #666;">{recommendation}</p>
+        </div>""", unsafe_allow_html=True)
+        
+        # Create metrics using columns for better compatibility
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric(
+                label="Average RT60",
+                value=f"{avg_rt60:.2f}s",
+                help="Target: 0.3-0.5s for broadcast quality"
+            )
+            status_emoji = "✅" if target_min <= avg_rt60 <= target_max else "⚠️" if avg_rt60 > target_max else "🔍"
+            st.write(f"{status_emoji} {'Good' if target_min <= avg_rt60 <= target_max else 'Adjust' if avg_rt60 > target_max else 'Monitor'}")
+        
+        with col2:
+            st.metric(
+                label="Range",
+                value=f"{min_rt60:.2f}s - {max_rt60:.2f}s",
+                help="Variation across measurement positions"
+            )
+            range_emoji = "✅" if (max_rt60 - min_rt60) < 0.2 else "⚠️"
+            st.write(f"{range_emoji} {'Tight' if (max_rt60 - min_rt60) < 0.2 else 'Variable'}")
+        
+        with col3:
+            st.metric(
+                label="In Target Range",
+                value=f"{target_percentage:.0f}%",
+                help="Percentage of measurements within 0.3-0.5s target"
+            )
+            target_emoji = "🎯" if target_percentage >= 80 else "📈" if target_percentage >= 60 else "🔧"
+            st.write(f"{target_emoji} {'Excellent' if target_percentage >= 80 else 'Improving' if target_percentage >= 60 else 'Work Needed'}")
+        
+        # Footer info
+        st.info(f"**Target:** 0.3-0.5s for broadcast quality | **Panel Count:** {panel_count} panels")
     
     def render_frequency_analysis(self, space):
         """Render frequency analysis dashboard using specialized explorer"""
@@ -766,30 +780,50 @@ class AcousticDashboard:
             return f"<p>⚠️ Data not available for {space}</p>"
         
         # Calculate actual metrics
-        avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
-        worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
         critical_positions = len(evidence_data[evidence_data['treatment_urgency'] == 'critical'])
         
         if space == "Studio 8":
+            # Studio 8 has STI data
+            avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
+            worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
             geometry_info = "The dual-zone geometry (Zone A: set volume, Zone B: ceiling cavity) creates modal congestion"
+            
+            return f"""
+            <div class="problem-highlight">
+                <h3>PRODUCTION IMPACT - {space}</h3>
+                <ul>
+                    <li><strong>Speech Intelligibility Crisis:</strong> {avg_sti_degradation:.1f}% average STI degradation from reference standard</li>
+                    <li><strong>Worst Performance Area:</strong> {worst_position['position']} position with {worst_position['sti_degradation_percent']:.1f}% degradation</li>
+                    <li><strong>Critical Treatment Needed:</strong> {critical_positions} positions require immediate intervention</li>
+                    <li><strong>Broadcast Standards Risk:</strong> Performance below EBU R128 and ATSC A/85 quality requirements</li>
+                    <li><strong>Professional Impact:</strong> {geometry_info} that degrades speech clarity</li>
+                    <li><strong>Viewer Experience Impact:</strong> Poor audio clarity directly affects audience engagement and retention</li>
+                    <li><strong>Regulatory Compliance:</strong> Current performance compromises broadcast quality standards</li>
+                </ul>
+                <p><strong>Critical Risk Assessment:</strong> Professional credibility, audience retention, and regulatory compliance at risk. Immediate acoustic treatment required to achieve broadcast-quality speech intelligibility for sports and magazine-style programming.</p>
+            </div>
+            """
         else:
+            # The Hub - no STI data, focus on RT60 issues
+            worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
+            avg_rt60_increase = evidence_data['RT60_500Hz_increase_percent'].mean()
             geometry_info = "The hexagonal geometry with irregular angles (88° and 38°) creates complex reflection patterns"
-        
-        return f"""
-        <div class="problem-highlight">
-            <h3>PRODUCTION IMPACT - {space}</h3>
-            <ul>
-                <li><strong>Speech Intelligibility Crisis:</strong> {avg_sti_degradation:.1f}% average STI degradation from reference standard</li>
-                <li><strong>Worst Performance Area:</strong> {worst_position['position']} position with {worst_position['sti_degradation_percent']:.1f}% degradation</li>
-                <li><strong>Critical Treatment Needed:</strong> {critical_positions} positions require immediate intervention</li>
-                <li><strong>Broadcast Standards Risk:</strong> Performance below EBU R128 and ATSC A/85 quality requirements</li>
-                <li><strong>Professional Impact:</strong> {geometry_info} that degrades speech clarity</li>
-                <li><strong>Viewer Experience Impact:</strong> Poor audio clarity directly affects audience engagement and retention</li>
-                <li><strong>Regulatory Compliance:</strong> Current performance compromises broadcast quality standards</li>
-            </ul>
-            <p><strong>Critical Risk Assessment:</strong> Professional credibility, audience retention, and regulatory compliance at risk. Immediate acoustic treatment required to achieve broadcast-quality speech intelligibility for sports and magazine-style programming.</p>
-        </div>
-        """
+            
+            return f"""
+            <div class="problem-highlight">
+                <h3>PRODUCTION IMPACT - {space}</h3>
+                <ul>
+                    <li><strong>Reverberation Issues:</strong> {avg_rt60_increase:.1f}% average RT60 increase from ideal broadcast standards</li>
+                    <li><strong>Worst Performance Area:</strong> {worst_rt60_pos['position']} position with {worst_rt60_pos['RT60_500Hz_increase_percent']:.1f}% RT60 increase</li>
+                    <li><strong>Critical Treatment Needed:</strong> {critical_positions} positions require immediate intervention</li>
+                    <li><strong>Speech Clarity Risk:</strong> Excessive reverberation affects broadcast quality (STI data not recorded)</li>
+                    <li><strong>Professional Impact:</strong> {geometry_info} that degrades speech clarity</li>
+                    <li><strong>Viewer Experience Impact:</strong> Poor acoustic environment affects audience engagement</li>
+                    <li><strong>Regulatory Compliance:</strong> RT60 performance may compromise broadcast quality standards</li>
+                </ul>
+                <p><strong>Critical Risk Assessment:</strong> While STI data wasn't recorded for The Hub, RT60 analysis indicates acoustic treatment needed to achieve broadcast-quality reverberation control for professional programming.</p>
+            </div>
+            """
             
     def get_recommended_solution_content(self, space):
         """Generate space-specific recommended solution content with enhanced detail"""

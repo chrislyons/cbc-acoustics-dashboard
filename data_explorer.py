@@ -272,8 +272,7 @@ class DataExplorer:
             
             return defaults
         
-        # Show dataset selection info
-        st.info("📊 **Select datasets to view:**")
+        # Dataset selection section (removed duplicate heading)
         
         # Single-column layout for dataset selection
         left_col, right_col = st.columns(2)
@@ -361,15 +360,7 @@ class DataExplorer:
                 column_config=column_config
             )
             
-            # Export functionality - place in the right column placeholder
-            csv = display_df.to_csv(index=False)
-            with download_placeholder.container():
-                st.download_button(
-                    label="Download filtered data as CSV",
-                    data=csv,
-                    file_name=f"filtered_acoustic_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
+            # Removed duplicate download button - keeping the one in header
         else:
             st.warning("Please select at least one column to display")
     
@@ -418,11 +409,10 @@ class DataExplorer:
         header_col1, header_col2 = st.columns([1, 1])
         
         with header_col1:
-            st.info("**📁 Raw Data Explorer:** Access and analyze the source measurement data from Smaart acoustic tests")
+            st.info("**📊 Select datasets to view:**")
         
         with header_col2:
             # Download CSV button (replacing panel count controls)
-            st.markdown("**Data Export**")
             
             # Get all CSV files in the data directory
             data_path = Path('data/generated')
@@ -452,7 +442,7 @@ class DataExplorer:
                         first_sheet = False
                     
                     st.download_button(
-                        label="📥 Download All CSV Data",
+                        label="Download filtered data as CSV",
                         data=combined_csv.getvalue(),
                         file_name=f"cbc_acoustic_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                         mime="text/csv",
@@ -462,7 +452,7 @@ class DataExplorer:
             else:
                 st.warning("No CSV files found in data/generated directory")
         
-        st.markdown("---")
+        # Removed horizontal divider for cleaner layout
         
         # Load data
         if not self.datasets:

@@ -323,6 +323,245 @@ class Enhanced3DVisualizer:
         
         return fig
     
+    def create_hub_detailed_model(self, show_panels=True, panel_count=10):
+        """Create detailed Hub model with treatment visualization based on actual floorplan"""
+        
+        # Hub dimensions from actual floorplan (feet)
+        hub_width = 15.83  # 190" converted to feet
+        hub_height = 12.5  # 150" from floor
+        grid_height = 12.5  # 150" pipe grid height
+        
+        fig = go.Figure()
+        
+        # Add accurate Hub room structure based on floorplan
+        self._add_hub_structure_accurate(fig, hub_width, hub_height, grid_height)
+        
+        # Measurement positions for Hub based on PDF floorplan layout
+        positions = {
+            "MidRoom": {"coords": [0, 0, 6], "color": self.colors['reference_pos'], "size": 10},
+            "BackCorner": {"coords": [-6, -2, 6], "color": self.colors['measurement_pos'], "size": 8},
+            "Chair1": {"coords": [-4.5, 0.5, 4], "color": "blue", "size": 8},  # In set build area (left side)
+            "Chair2": {"coords": [-3.5, 1.5, 4], "color": "green", "size": 8},  # In set build area (left side)  
+            "CeilingCorner": {"coords": [5, 1, 10], "color": self.colors['measurement_pos'], "size": 8}
+        }
+        
+        # Hide measurement positions for now - will fix later
+        # self._add_measurement_positions(fig, positions)
+        
+        # Add acoustic treatment panels if requested
+        if show_panels:
+            self._add_treatment_panels_hub_accurate(fig, panel_count, hub_width, hub_height, grid_height)
+        
+        # Hide set build furniture for now - will fix later  
+        # self._add_hub_furniture_accurate(fig, hub_width)
+        
+        fig.update_layout(
+            title="The Hub - Detailed 3D Model with Acoustic Treatment (Accurate Floorplan)",
+            scene=dict(
+                xaxis_title="(feet)",
+                yaxis_title="(feet)", 
+                zaxis_title="Height (feet)",
+                camera=dict(eye=dict(x=1.2, y=1.5, z=0.8)),
+                aspectmode='data'
+            ),
+            height=700,
+            showlegend=False,
+            margin=dict(l=20, r=20, t=60, b=20)
+        )
+        
+        return fig
+    
+    def _add_hub_structure_accurate(self, fig, width, height, grid_height):
+        """Add accurate Hub room structure based on floorplan"""
+        import numpy as np
+        
+        # Create accurate Hub shape based on floorplan
+        # The Hub is an irregular trapezoidal/pentagonal shape, not hexagonal
+        # Based on 190" width, with 88° and 38° angles
+        
+        # Define the actual Hub shape coordinates based on PDF floorplan
+        # The Hub has a distinctive diagonal cut creating the 88° and 38° angles
+        # Using coordinate system with (0,0) at approximate center
+        
+        # Based on PDF: 190" wide base, with diagonal cuts creating irregular shape
+        # Define vertices more accurately based on floorplan geometry
+        hub_vertices = [
+            [-7.9, -3.5],           # Bottom left corner (190" = ~16' total width)
+            [7.9, -3.5],            # Bottom right corner (straight 190" wall)
+            [6.5, -1.0],            # Start of 38° angled cut (right side)
+            [4.5, 2.0],             # End of 38° angled cut
+            [3.0, 4.5],             # Top right area
+            [-2.5, 5.0],            # Top center-left
+            [-6.0, 3.5],            # Start of 88° angled cut (left side)  
+            [-7.5, 1.0],            # End of 88° angled cut
+            [-8.2, -1.5],           # Left side back toward bottom
+        ]
+        
+        # Close the shape
+        hub_x = [v[0] for v in hub_vertices] + [hub_vertices[0][0]]
+        hub_y = [v[1] for v in hub_vertices] + [hub_vertices[0][1]]
+        hub_z = [0] * len(hub_x)
+        
+        # Floor outline
+        fig.add_trace(go.Scatter3d(
+            x=hub_x, y=hub_y, z=hub_z,
+            mode='lines',
+            line=dict(color=self.colors['room_structure'], width=6),
+            name='Hub Floor Outline',
+            showlegend=False
+        ))
+        
+        # Ceiling outline
+        ceiling_z = [height] * len(hub_x)
+        fig.add_trace(go.Scatter3d(
+            x=hub_x, y=hub_y, z=ceiling_z,
+            mode='lines',
+            line=dict(color=self.colors['room_structure'], width=6),
+            name='Hub Ceiling Outline',
+            showlegend=False
+        ))
+        
+        # Vertical edges
+        for i in range(len(hub_x)-1):  # -1 because last point duplicates first
+            fig.add_trace(go.Scatter3d(
+                x=[hub_x[i], hub_x[i]], 
+                y=[hub_y[i], hub_y[i]], 
+                z=[0, height],
+                mode='lines',
+                line=dict(color=self.colors['room_structure'], width=4),
+                showlegend=False
+            ))
+        
+        # Add pipe grid at 150" (12.5 feet) - shown as translucent plane
+        grid_x = np.linspace(min(hub_x), max(hub_x), 10)
+        grid_y = np.linspace(min(hub_y), max(hub_y), 8)
+        X, Y = np.meshgrid(grid_x, grid_y)
+        Z = np.full_like(X, grid_height)
+        
+        fig.add_trace(go.Surface(
+            x=X, y=Y, z=Z,
+            colorscale=[[0, 'rgba(0, 255, 0, 0.2)'], [1, 'rgba(0, 255, 0, 0.2)']],
+            opacity=0.3,
+            name='Pipe Grid (150")',
+            showlegend=True,
+            showscale=False,
+            hovertemplate="Pipe Grid<br>Height: 150\" (12.5')<extra></extra>"
+        ))
+    
+    def _add_treatment_panels_hub_accurate(self, fig, panel_count, width, height, grid_height):
+        """Add acoustic treatment panels optimized for actual Hub geometry"""
+        
+        panels_used = 0
+        
+        # Priority 1: Corner bass traps at critical acoustic corners
+        corner_positions = [
+            {"pos": [6, -3, height-2], "name": "SE Corner Bass Trap"},      # Right corner
+            {"pos": [-6, 4, height-2], "name": "NW Corner Bass Trap"},      # Left angled corner
+            {"pos": [6, 3, height-2], "name": "NE Corner Bass Trap"},       # Top right
+            {"pos": [-6, -2, height-2], "name": "SW Corner Bass Trap"}      # Bottom left
+        ]
+        
+        for i, corner in enumerate(corner_positions[:min(4, panel_count)]):
+            self._create_rectangular_panel(
+                fig, corner['pos'], 3.0, 2.0, 5.5,
+                self.colors['bass_trap'], corner['name'],
+                "Corner bass trap - Modal control", 'horizontal'
+            )
+        panels_used = min(4, panel_count)
+        
+        # Priority 2: Ceiling panels above set build area
+        if panel_count > 4:
+            ceiling_panels = [
+                {"pos": [-2, 1, height-1], "name": "Set Build Ceiling Panel"},     # Above set build
+                {"pos": [0, 0, height-1], "name": "Center Ceiling Panel"},         # Room center
+                {"pos": [3, -1, height-1], "name": "East Ceiling Panel"},          # Right side
+                {"pos": [-4, 2, height-1], "name": "West Ceiling Panel"},          # Left side
+                {"pos": [1, 2, height-1], "name": "North Ceiling Panel"}           # Top area
+            ]
+            
+            ceiling_count = min(5, panel_count - panels_used)
+            for i in range(ceiling_count):
+                pos_data = ceiling_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 5.5,
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "Ceiling absorption panel", 'horizontal'
+                )
+            panels_used += ceiling_count
+        
+        # Priority 3: Wall panels on straight sections
+        if panel_count > 9:
+            wall_panels = [
+                {"pos": [7, -3, 6], "name": "East Wall Panel"},                    # Right straight wall
+                {"pos": [-7, 3, 6], "name": "West Wall Panel"},                    # Left area
+                {"pos": [2, 4, 6], "name": "North Wall Panel"},                    # Top wall
+                {"pos": [-2, -3, 6], "name": "South Wall Panel"}                   # Bottom wall
+            ]
+            
+            wall_count = min(len(wall_panels), panel_count - panels_used)
+            for i in range(wall_count):
+                pos_data = wall_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 3.0,
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "Wall absorption panel", 'vertical-long-wall'
+                )
+            panels_used += wall_count
+    
+    def _add_hub_furniture_accurate(self, fig, width):
+        """Add Hub furniture based on actual PDF floorplan"""
+        
+        # Set Build area (purple in floorplan) - positioned on left side as shown in PDF
+        # More accurate positioning based on floorplan
+        set_build_x = [-6, -3, -3, -6, -6]  # Left side, more accurate to PDF
+        set_build_y = [-0.5, -0.5, 2.5, 2.5, -0.5]  # Centered vertically in that area
+        set_build_z = [0] * 5
+        
+        fig.add_trace(go.Scatter3d(
+            x=set_build_x, y=set_build_y, z=set_build_z,
+            mode='lines',
+            line=dict(color='#8B008B', width=8),  # Purple for set build
+            name='Set Build Area',
+            showlegend=True
+        ))
+        
+        # Set build platform/desk at 3.5 feet height
+        platform_height = 3.5
+        platform_z = [platform_height] * 5
+        
+        fig.add_trace(go.Scatter3d(
+            x=set_build_x, y=set_build_y, z=platform_z,
+            mode='lines',
+            line=dict(color='#8B008B', width=6),
+            name='Set Build Platform',
+            showlegend=False
+        ))
+        
+        # Connect floor to platform with vertical supports
+        for i in range(4):  # Skip the closing point
+            fig.add_trace(go.Scatter3d(
+                x=[set_build_x[i], set_build_x[i]], 
+                y=[set_build_y[i], set_build_y[i]], 
+                z=[0, platform_height],
+                mode='lines',
+                line=dict(color='#8B008B', width=4),
+                showlegend=False
+            ))
+        
+        # Add carpet areas indication (floor level visualization)
+        # Rosco Red carpet area
+        red_carpet_x = [-1, 5, 5, -1, -1]
+        red_carpet_y = [-2, -2, 1, 1, -2]
+        red_carpet_z = [0.1] * 5  # Slightly above floor
+        
+        fig.add_trace(go.Scatter3d(
+            x=red_carpet_x, y=red_carpet_y, z=red_carpet_z,
+            mode='lines',
+            line=dict(color='#DC143C', width=4),  # Crimson red
+            name='Rosco Red Carpet',
+            showlegend=True
+        ))
+    
     def _add_room_structure(self, fig, width_EW, length_NS, height):
         """Add room wireframe structure"""
         
