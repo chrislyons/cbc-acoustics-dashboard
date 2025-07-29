@@ -799,7 +799,7 @@ class AcousticDashboard:
                     <li><strong>Equipment Placement Crisis:</strong> All corner positions and ceiling locations must be avoided until treatment completion</li>
                     <li><strong>Post-Production Burden:</strong> Extensive corrective EQ and processing required, compromising natural sound quality</li>
                 </ul>
-                <p><strong>Critical Assessment:</strong> Based on comprehensive Smaart frequency response analysis (225 data points, 8 positions), Studio 8 currently fails to meet professional broadcast standards. Immediate acoustic treatment is essential to transform this space into a broadcast-quality facility suitable for CBC's sports and magazine-style programming requirements.</p>
+                <p><strong>Critical Assessment:</strong> Based on comprehensive Smaart frequency response analysis, Studio 8 currently fails to meet professional broadcast standards. Immediate acoustic treatment is essential to transform this space into a broadcast-quality facility suitable for CBC's sports and magazine-style programming requirements.</p>
             </div>
             """
         else:
@@ -885,7 +885,7 @@ class AcousticDashboard:
                         </ul>
                     </li>
                 </ul>
-                <p><strong>Implementation Note:</strong> Based on July 15 comprehensive Smaart measurements (225 data points), this phased approach transforms Studio 8 from "poor to fair" current rating to professional broadcast-grade facility optimized for CBC's sports and magazine-style programming.</p>
+                <p><strong>Implementation Note:</strong> Based on July 15 comprehensive Smaart measurements, this phased approach transforms Studio 8 from "poor to fair" current rating to professional broadcast-grade facility optimized for CBC's sports and magazine-style programming.</p>
             </div>
             """
         else:
