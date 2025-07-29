@@ -1,0 +1,8 @@
+position,zone,sti_degradation_percent,performance_class,treatment_urgency,priority_score,recommended_panels,treatment_type
+HostC,A,25.3,acceptable,high,6.6,4-6 panels,"Wall panels (3 inch thick)"
+SECorner,A,33.7,acceptable,high,5.7,4-6 panels,"Bass traps (5.5 inch thick)"
+NECorner-Low,A,29.5,acceptable,high,5.6,4-6 panels,"Bass traps (5.5 inch thick)"
+Ceiling,B,32.6,acceptable,high,5.1,4-6 panels,"Ceiling clouds (3 inch thick)"
+NECorner-High,B,30.5,acceptable,high,5.0,4-6 panels,"Bass traps (5.5 inch thick)"
+SWCorner,B,26.3,acceptable,high,4.9,4-6 panels,"Bass traps (5.5 inch thick)"
+MidRoom,A,20.0,good,medium,4.4,2-4 panels,"Wall panels (3"" thick)"

@@ -1,0 +1,687 @@
+/* CBC Interactive Dashboard Stylesheet */
+/* Modern, professional styling for acoustic analysis dashboard */
+
+/* ==========================================================================
+   CSS CUSTOM PROPERTIES (Variables)
+   ========================================================================== */
+
+:root {
+    /* Light Theme */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-accent: #f1f3f4;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #868e96;
+    --border-color: #dee2e6;
+    --border-light: #e9ecef;
+    
+    /* Brand Colors */
+    --cbc-red: #e31e24;
+    --cbc-blue: #1a73e8;
+    --accent-blue: #007bff;
+    --accent-red: #dc3545;
+    --accent-green: #28a745;
+    --accent-orange: #fd7e14;
+    --accent-purple: #6f42c1;
+    
+    /* Status Colors */
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --info: #17a2b8;
+    
+    /* Shadows */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    
+    /* Border Radius */
+    --border-radius: 0.375rem;
+    --border-radius-lg: 0.5rem;
+    --border-radius-xl: 1rem;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 3rem;
+    
+    /* Typography */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease-in-out;
+    --transition-base: 0.3s ease-in-out;
+    --transition-slow: 0.5s ease-in-out;
+}
+
+/* Dark Theme - Based on working inline styles */
+[data-theme="dark"] {
+    --bg-primary: #0e1117;
+    --bg-secondary: #262730;
+    --bg-accent: #30363d;
+    --text-primary: #fafafa;
+    --text-secondary: #a0a0a0;
+    --text-muted: #6e7681;
+    --border-color: #464853;
+    --border-light: #21262d;
+    
+    --accent-blue: #4dabf7;
+    --accent-red: #ff6b6b;
+    --accent-green: #51cf66;
+    --accent-orange: #ffd43b;
+    --accent-purple: #a5a5ff;
+    
+    --success: #51cf66;
+    --warning: #ffd43b;
+    --danger: #ff6b6b;
+    --info: #4dabf7;
+}
+
+/* ==========================================================================
+   GLOBAL STYLES
+   ========================================================================== */
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+/* Typography - Enhanced text visibility */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+    opacity: 1 !important;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-base); }
+h6 { font-size: var(--font-size-sm); }
+
+p, li, span, div {
+    color: var(--text-primary) !important;
+    line-height: 1.6;
+    opacity: 1 !important;
+}
+
+strong, b {
+    font-weight: 600;
+    color: var(--text-primary) !important;
+    opacity: 1 !important;
+}
+
+em, i {
+    font-style: italic;
+    color: var(--text-primary) !important;
+    opacity: 0.9 !important;
+}
+
+/* ==========================================================================
+   HEADER COMPONENTS
+   ========================================================================== */
+
+.main-header {
+    background: linear-gradient(90deg, #FF6B6B, #4ECDC4);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-xl);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.main-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+    pointer-events: none;
+}
+
+.main-header h1 {
+    color: white !important;
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    opacity: 1 !important;
+}
+
+.main-header p {
+    color: rgba(255,255,255,0.9) !important;
+    font-size: var(--font-size-lg);
+    font-weight: 400;
+    margin-bottom: 0;
+    opacity: 1 !important;
+}
+
+/* ==========================================================================
+   METRIC CARDS
+   ========================================================================== */
+
+.metric-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent-blue), var(--accent-green));
+    transition: width var(--transition-base);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent-blue);
+}
+
+.metric-card:hover::before {
+    width: 6px;
+}
+
+.metric-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.metric-value {
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    margin: var(--spacing-sm) 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    line-height: 1;
+}
+
+.metric-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--spacing-sm);
+    font-weight: 400;
+}
+
+/* Metric Status Colors */
+.critical-metric {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.warning-metric {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.good-metric {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.info-metric {
+    color: var(--info);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   HIGHLIGHT BOXES - Fixed for dark mode visibility
+   ========================================================================== */
+
+.problem-highlight {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.08));
+    border: 2px solid var(--accent-orange);
+    color: var(--text-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: 0 2px 10px rgba(255, 193, 7, 0.1);
+}
+
+.problem-highlight h3, 
+.problem-highlight p, 
+.problem-highlight li, 
+.problem-highlight strong {
+    color: var(--text-primary) !important;
+    opacity: 1 !important;
+}
+
+.solution-highlight {
+    background: linear-gradient(135deg, rgba(74, 185, 255, 0.15), rgba(74, 185, 255, 0.08));
+    border: 2px solid var(--accent-blue);
+    color: var(--text-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: 0 2px 10px rgba(74, 185, 255, 0.1);
+}
+
+.solution-highlight h3, 
+.solution-highlight p, 
+.solution-highlight li, 
+.solution-highlight strong {
+    color: var(--text-primary) !important;
+    opacity: 1 !important;
+}
+
+.info-highlight {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.15), rgba(23, 162, 184, 0.08));
+    border: 2px solid var(--info);
+    color: var(--text-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: 0 2px 10px rgba(23, 162, 184, 0.1);
+}
+
+.info-highlight h3, 
+.info-highlight p, 
+.info-highlight li, 
+.info-highlight strong {
+    color: var(--text-primary) !important;
+    opacity: 1 !important;
+}
+
+.warning-highlight {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.08));
+    border: 2px solid var(--warning);
+    color: var(--text-primary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-lg) 0;
+    box-shadow: 0 2px 10px rgba(255, 193, 7, 0.1);
+}
+
+.warning-highlight h3, 
+.warning-highlight p, 
+.warning-highlight li, 
+.warning-highlight strong {
+    color: var(--text-primary) !important;
+    opacity: 1 !important;
+}
+
+/* Ensure all highlight boxes have proper text visibility in all themes */
+.problem-highlight *, 
+.solution-highlight *, 
+.info-highlight *, 
+.warning-highlight * {
+    color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   TIMELINE COMPONENTS
+   ========================================================================== */
+
+.timeline-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--accent-blue), var(--accent-green));
+}
+
+.timeline-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
+}
+
+/* ==========================================================================
+   STREAMLIT COMPONENT OVERRIDES
+   ========================================================================== */
+
+/* Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    filter: brightness(1.05);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Selectbox */
+.stSelectbox > div > div {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    transition: all var(--transition-base);
+}
+
+.stSelectbox > div > div:hover {
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Slider */
+.stSlider > div > div > div {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.stSlider .stSlider > div > div > div > div {
+    background-color: var(--accent-blue);
+}
+
+/* Checkbox */
+.stCheckbox > label {
+    color: var(--text-primary);
+    transition: color var(--transition-base);
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: var(--spacing-sm);
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xs);
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    transition: all var(--transition-base);
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: var(--accent-blue);
+    color: white;
+}
+
+/* Sidebar */
+.css-1d391kg {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+/* Main content area */
+.main .block-container {
+    padding-top: var(--spacing-lg);
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   PLOTLY CHART STYLING
+   ========================================================================== */
+
+/* Let Plotly handle its own theming, but provide container styling */
+[data-testid="stPlotlyChart"] {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+/* Spacing */
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: var(--spacing-xs) !important; }
+.mb-2 { margin-bottom: var(--spacing-sm) !important; }
+.mb-3 { margin-bottom: var(--spacing-md) !important; }
+.mb-4 { margin-bottom: var(--spacing-lg) !important; }
+.mb-5 { margin-bottom: var(--spacing-xl) !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: var(--spacing-xs) !important; }
+.mt-2 { margin-top: var(--spacing-sm) !important; }
+.mt-3 { margin-top: var(--spacing-md) !important; }
+.mt-4 { margin-top: var(--spacing-lg) !important; }
+.mt-5 { margin-top: var(--spacing-xl) !important; }
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: var(--spacing-xs) !important; }
+.p-2 { padding: var(--spacing-sm) !important; }
+.p-3 { padding: var(--spacing-md) !important; }
+.p-4 { padding: var(--spacing-lg) !important; }
+.p-5 { padding: var(--spacing-xl) !important; }
+
+/* Text utilities */
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-success { color: var(--success) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-info { color: var(--info) !important; }
+
+.fw-light { font-weight: 300 !important; }
+.fw-normal { font-weight: 400 !important; }
+.fw-medium { font-weight: 500 !important; }
+.fw-semibold { font-weight: 600 !important; }
+.fw-bold { font-weight: 700 !important; }
+
+/* Background utilities */
+.bg-primary { background-color: var(--bg-primary) !important; }
+.bg-secondary { background-color: var(--bg-secondary) !important; }
+.bg-accent { background-color: var(--bg-accent) !important; }
+
+/* Border utilities */
+.border { border: 1px solid var(--border-color) !important; }
+.border-0 { border: 0 !important; }
+.border-top { border-top: 1px solid var(--border-color) !important; }
+.border-bottom { border-bottom: 1px solid var(--border-color) !important; }
+.border-left { border-left: 1px solid var(--border-color) !important; }
+.border-right { border-right: 1px solid var(--border-color) !important; }
+
+.rounded { border-radius: var(--border-radius) !important; }
+.rounded-lg { border-radius: var(--border-radius-lg) !important; }
+.rounded-xl { border-radius: var(--border-radius-xl) !important; }
+
+/* Shadow utilities */
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow { box-shadow: var(--shadow) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .main-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .main-header h1 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .metric-card {
+        padding: var(--spacing-md);
+    }
+    
+    .metric-value {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .highlight-box {
+        padding: var(--spacing-md);
+    }
+    
+    .timeline-item {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .main-header h1 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .metric-value {
+        font-size: var(--font-size-xl);
+    }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+/* Focus states */
+button:focus,
+select:focus,
+input:focus,
+.stButton > button:focus {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-primary: #000000;
+        --bg-primary: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+        --border-color: #ffffff;
+        --text-primary: #ffffff;
+        --bg-primary: #000000;
+    }
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+
+@media print {
+    .main-header {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+    
+    .metric-card,
+    .highlight-box,
+    .timeline-item {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .stButton,
+    .stSelectbox,
+    .stSlider,
+    .stCheckbox {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   DARK MODE DETECTION & AUTO-SWITCHING
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        color-scheme: light;
+    }
+}
+
+/* Ensure theme consistency across components */
+html[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+html[data-theme="light"] {
+    color-scheme: light;
+}

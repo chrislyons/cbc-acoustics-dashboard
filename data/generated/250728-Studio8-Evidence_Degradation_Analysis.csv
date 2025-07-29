@@ -1,0 +1,8 @@
+position,zone,priority,description,reference_sti,position_sti,sti_degradation_percent,reference_alcons,position_alcons,alcons_increase_percent,performance_class,treatment_urgency,RT60_250Hz_increase_percent,C50_250Hz_degradation_percent,RT60_500Hz_increase_percent,C50_500Hz_degradation_percent,RT60_1kHz_increase_percent,C50_1kHz_degradation_percent,RT60_2kHz_increase_percent,C50_2kHz_degradation_percent,RT60_4kHz_increase_percent,C50_4kHz_degradation_percent
+SWCorner,B,high,Modal analysis: SW corner Zone B,0.95,0.7,26.3,2.18,3.84,76.1,acceptable,high,11.5,81.7,3.4,77.6,11.9,81.9,23.5,79.5,12.0,76.7
+HostC,A,critical,"Real talent position, facing cameras",0.95,0.71,25.3,2.18,3.64,67.0,acceptable,high,1.6,65.2,1.7,68.7,6.8,73.2,17.6,75.4,4.0,75.2
+MidRoom,A,medium,Geometric center reference position,0.95,0.76,20.0,2.18,3.38,55.0,good,medium,13.1,72.0,0.0,68.6,8.5,71.7,19.6,72.1,10.0,58.2
+NECorner-Low,A,high,Modal analysis: NE corner Zone A,0.95,0.67,29.5,2.18,4.2,92.7,acceptable,high,11.5,84.4,6.8,79.3,10.2,87.7,17.6,89.6,10.0,89.9
+NECorner-High,B,high,Modal analysis: NE corner Zone B,0.95,0.66,30.5,2.18,4.5,106.4,acceptable,high,16.4,92.4,0.0,85.6,13.6,87.0,23.5,86.6,10.0,89.2
+SECorner,A,high,"Modal analysis: SE corner, chest height",0.95,0.63,33.7,2.18,4.18,91.7,acceptable,high,4.9,82.5,1.7,80.7,10.2,85.1,23.5,89.4,12.0,81.9
+Ceiling,B,high,Above desk with drape interference,0.95,0.64,32.6,2.18,4.45,104.1,acceptable,high,18.0,100.6,8.5,82.3,11.9,92.6,21.6,91.6,8.0,83.3

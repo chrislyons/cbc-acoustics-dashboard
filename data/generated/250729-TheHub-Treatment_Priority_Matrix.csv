@@ -1,0 +1,6 @@
+position,zone,sti_degradation_percent,performance_class,treatment_urgency,priority_score,recommended_panels,treatment_type
+CeilingCorner,Acoustic,9.4,good,medium,4.7,4-6 panels,Bass traps (5.5 inch thick)
+Chair2,Talent,5.6,good,medium,3.5,2-4 panels,Wall panels (3 inch thick)
+BackCorner,Acoustic,6.0,good,medium,3.4,4-6 panels,Bass traps (5.5 inch thick)
+MidRoom,General,3.2,good,medium,3.2,3-5 panels,Ceiling clouds (3 inch thick)
+Chair1,Talent,1.1,good,medium,2.3,2-4 panels,Wall panels (3 inch thick)
