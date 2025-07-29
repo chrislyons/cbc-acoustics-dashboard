@@ -732,56 +732,6 @@ class TreatmentSimulator:
             total_cost = cost_2_inch + cost_3_inch + cost_5_5_inch
             budget_remaining = 1200 - total_cost
             
-            # Display cart contents
-            st.markdown("---")
-            st.subheader("Cart Summary")
-            if total_panels > 0:
-                if panel_5_5_count > 0:
-                    st.write(f"• {panel_5_5_count}x 5.5\" panels: ${cost_5_5_inch}")
-                if panel_3_count > 0:
-                    st.write(f"• {panel_3_count}x 3\" panels: ${cost_3_inch}")
-                if panel_2_count > 0:
-                    st.write(f"• {panel_2_count}x 2\" panels: ${cost_2_inch}")
-                
-                st.markdown(f"**Total: {total_panels} panels for ${total_cost} before HST**")
-                
-                if budget_remaining >= 0:
-                    st.success(f"${budget_remaining} remaining in budget")
-                else:
-                    st.error(f"${abs(budget_remaining)} over budget")
-                
-                # Add cost efficiency metrics here (moved from detailed breakdown)
-                # Calculate additional costs for efficiency metrics
-                labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
-                hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
-                fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
-                total_with_extras = total_cost + labor_cost + hardware_cost + fabric_cost
-                
-                # Calculate RT60 improvement for efficiency
-                new_rt60 = self.calculate_rt60_with_panels(panel_counts, drape_removal)
-                avg_rt60_improvement = ((np.mean(list(self.current_conditions["rt60_by_freq"].values())) - 
-                                        np.mean(list(new_rt60.values()))) / 
-                                       np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
-                
-                st.markdown("---")
-                st.markdown(f"**Total Project: ${total_with_extras}**")
-                
-                # Budget analysis
-                if total_with_extras <= 1200:
-                    st.success(f"✅ Within ${1200} budget\n\nRemaining: ${1200 - total_with_extras}")
-                elif total_cost <= 1200:
-                    st.warning(f"⚠️ Panels fit budget, but total project exceeds by ${total_with_extras - 1200}")
-                else:
-                    st.error(f"❌ Over budget by ${total_with_extras - 1200}")
-                
-                st.markdown("**Cost Efficiency:**")
-                cost_per_panel = total_with_extras / total_panels if total_panels > 0 else 0
-                rt60_improvement_per_dollar = (avg_rt60_improvement / total_with_extras * 100) if total_with_extras > 0 else 0
-                
-                st.write(f"• ${cost_per_panel:.0f} per panel (all-in)")
-                st.write(f"• {rt60_improvement_per_dollar:.2f}% RT60 improvement per $100")
-            else:
-                st.write("*Cart is empty - add some panels above*")
         
         with col2:
             # Visualization tabs (Position Impact hidden)
@@ -835,7 +785,57 @@ class TreatmentSimulator:
             with col4:
                 st.metric("Predicted STI", f"{predicted_sti:.2f}", f"{((predicted_sti - 0.67) / 0.67 * 100):.1f}% improvement")
             
-            # Add spacing between Treatment Summary and detailed sections
+            # Add bottom margin to Treatment Summary section
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Cost Summary - below Treatment Summary
+            st.subheader("Cost Summary")
+            
+            # Create two columns for cart summary
+            cart_col1, cart_col2 = st.columns([1, 1])
+            
+            with cart_col1:
+                # Left column - panel breakdown
+                if panel_5_5_count > 0:
+                    st.write(f"• {panel_5_5_count}x 5.5\" panels: ${cost_5_5_inch}")
+                if panel_3_count > 0:
+                    st.write(f"• {panel_3_count}x 3\" panels: ${cost_3_inch}")
+                if panel_2_count > 0:
+                    st.write(f"• {panel_2_count}x 2\" panels: ${cost_2_inch}")
+                
+                st.markdown(f"**Total: {total_panels} panels for ${total_cost} before HST**")
+                
+                if budget_remaining >= 0:
+                    st.success(f"${budget_remaining} remaining in budget")
+                else:
+                    st.error(f"${abs(budget_remaining)} over budget")
+            
+            with cart_col2:
+                # Right column - project total and cost efficiency
+                # Calculate additional costs for total project cost
+                labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
+                hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
+                fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
+                total_with_extras = total_cost + labor_cost + hardware_cost + fabric_cost
+                
+                st.markdown(f"**Total Project: ${total_with_extras}**")
+                
+                # Budget analysis
+                if total_with_extras <= 1200:
+                    st.success(f"✅ Within ${1200} budget\n\nRemaining: ${1200 - total_with_extras}")
+                elif total_cost <= 1200:
+                    st.warning(f"⚠️ Panels fit budget, but total project exceeds by ${total_with_extras - 1200}")
+                else:
+                    st.error(f"❌ Over budget by ${total_with_extras - 1200}")
+                
+                st.markdown("**Cost Efficiency:**")
+                cost_per_panel = total_with_extras / total_panels if total_panels > 0 else 0
+                rt60_improvement_per_dollar = (avg_rt60_improvement / total_with_extras * 100) if total_with_extras > 0 else 0
+                
+                st.write(f"• ${cost_per_panel:.0f} per panel (all-in)")
+                st.write(f"• {rt60_improvement_per_dollar:.2f}% RT60 improvement per $100")
+            
+            # Add spacing between Cart Summary and detailed sections
             st.markdown("<br><br>", unsafe_allow_html=True)
         
         # Detailed recommendations and cost breakdown (always visible)
