@@ -379,84 +379,84 @@ class AcousticDashboard:
             avg_sti_degradation = None
             worst_position = None
         
-        # Critical metrics row
-        col1, col2, col3, col4 = st.columns(4)
-        
-        # Dynamic metrics based on actual data
-        with col1:
-            if space == "Studio 8" and avg_sti_degradation is not None:
-                sti_status = "critical-metric" if avg_sti_degradation > 20 else "warning-metric" if avg_sti_degradation > 10 else "good-metric"
-                sti_icon = "🔴" if avg_sti_degradation > 20 else "⚠️" if avg_sti_degradation > 10 else "✅"
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">{sti_icon} STI DEGRADATION</div>
-                    <div class="metric-value {sti_status}">{avg_sti_degradation:.1f}%</div>
-                    <p>Average across positions</p>
-                    <div class="metric-subtitle">Target: &lt;15%</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                # The Hub - no STI data
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">📊 STI DATA</div>
-                    <div class="metric-value warning-metric">No Data</div>
-                    <p>STI not recorded for The Hub</p>
-                    <div class="metric-subtitle">RT60 analysis available</div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        with col2:
-            if space == "Studio 8" and worst_position is not None:
-                worst_pos_name = worst_position['position']
-                worst_degradation = worst_position['sti_degradation_percent']
-                worst_status = "critical-metric" if worst_degradation > 25 else "warning-metric"
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">📍 WORST POSITION</div>
-                    <div class="metric-value {worst_status}">{worst_pos_name}</div>
-                    <p>{worst_degradation:.1f}% STI degradation</p>
-                    <div class="metric-subtitle">Needs priority treatment</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                # The Hub - show RT60 based worst position instead
-                worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
-                worst_rt60_name = worst_rt60_pos['position']
-                worst_rt60_increase = worst_rt60_pos['RT60_500Hz_increase_percent']
-                rt60_status = "critical-metric" if worst_rt60_increase > 50 else "warning-metric"
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">📍 WORST POSITION</div>
-                    <div class="metric-value {rt60_status}">{worst_rt60_name}</div>
-                    <p>{worst_rt60_increase:.1f}% RT60 increase</p>
-                    <div class="metric-subtitle">Needs priority treatment</div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        with col3:
-            cost_status = "good-metric" if estimated_cost <= 1200 else "warning-metric"
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">💰 SOLUTION COST</div>
-                <div class="metric-value {cost_status}">${estimated_cost}</div>
-                <p>{total_panels} panels recommended</p>
-                <div class="metric-subtitle">Budget: $1,200</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col4:
-            # Count positions needing urgent treatment
-            urgent_positions = len(treatment_data[treatment_data['treatment_urgency'] == 'critical'])
-            urgent_status = "critical-metric" if urgent_positions > 2 else "warning-metric" if urgent_positions > 0 else "good-metric"
-            st.markdown(f"""
-            <div class="metric-card">
-                <div class="metric-label">🚨 URGENT TREATMENT</div>
-                <div class="metric-value {urgent_status}">{urgent_positions}</div>
-                <p>Positions need immediate work</p>
-                <div class="metric-subtitle">Critical priority</div>
-            </div>
-            """, unsafe_allow_html=True)
+        # Hidden - Critical metrics row (metric cards hidden per user request)
+        # col1, col2, col3, col4 = st.columns(4)
+        # 
+        # # Dynamic metrics based on actual data
+        # with col1:
+        #     if space == "Studio 8" and avg_sti_degradation is not None:
+        #         sti_status = "critical-metric" if avg_sti_degradation > 20 else "warning-metric" if avg_sti_degradation > 10 else "good-metric"
+        #         sti_icon = "🔴" if avg_sti_degradation > 20 else "⚠️" if avg_sti_degradation > 10 else "✅"
+        #         st.markdown(f"""
+        #         <div class="metric-card">
+        #             <div class="metric-label">{sti_icon} STI DEGRADATION</div>
+        #             <div class="metric-value {sti_status}">{avg_sti_degradation:.1f}%</div>
+        #             <p>Average across positions</p>
+        #             <div class="metric-subtitle">Target: &lt;15%</div>
+        #         </div>
+        #         """, unsafe_allow_html=True)
+        #     else:
+        #         # The Hub - no STI data
+        #         st.markdown(f"""
+        #         <div class="metric-card">
+        #             <div class="metric-label">📊 STI DATA</div>
+        #             <div class="metric-value warning-metric">No Data</div>
+        #             <p>STI not recorded for The Hub</p>
+        #             <div class="metric-subtitle">RT60 analysis available</div>
+        #         </div>
+        #         """, unsafe_allow_html=True)
+        # 
+        # with col2:
+        #     if space == "Studio 8" and worst_position is not None:
+        #         worst_pos_name = worst_position['position']
+        #         worst_degradation = worst_position['sti_degradation_percent']
+        #         worst_status = "critical-metric" if worst_degradation > 25 else "warning-metric"
+        #         st.markdown(f"""
+        #         <div class="metric-card">
+        #             <div class="metric-label">📍 WORST POSITION</div>
+        #             <div class="metric-value {worst_status}">{worst_pos_name}</div>
+        #             <p>{worst_degradation:.1f}% STI degradation</p>
+        #             <div class="metric-subtitle">Needs priority treatment</div>
+        #         </div>
+        #         """, unsafe_allow_html=True)
+        #     else:
+        #         # The Hub - show RT60 based worst position instead
+        #         worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
+        #         worst_rt60_name = worst_rt60_pos['position']
+        #         worst_rt60_increase = worst_rt60_pos['RT60_500Hz_increase_percent']
+        #         rt60_status = "critical-metric" if worst_rt60_increase > 50 else "warning-metric"
+        #         st.markdown(f"""
+        #         <div class="metric-card">
+        #             <div class="metric-label">📍 WORST POSITION</div>
+        #             <div class="metric-value {rt60_status}">{worst_rt60_name}</div>
+        #             <p>{worst_rt60_increase:.1f}% RT60 increase</p>
+        #             <div class="metric-subtitle">Needs priority treatment</div>
+        #         </div>
+        #         """, unsafe_allow_html=True)
+        # 
+        # with col3:
+        #     cost_status = "good-metric" if estimated_cost <= 1200 else "warning-metric"
+        #     st.markdown(f"""
+        #     <div class="metric-card">
+        #         <div class="metric-label">💰 SOLUTION COST</div>
+        #         <div class="metric-value {cost_status}">${estimated_cost}</div>
+        #         <p>{total_panels} panels recommended</p>
+        #         <div class="metric-subtitle">Budget: $1,200</div>
+        #     </div>
+        #     """, unsafe_allow_html=True)
+        # 
+        # with col4:
+        #     # Count positions needing urgent treatment
+        #     urgent_positions = len(treatment_data[treatment_data['treatment_urgency'] == 'critical'])
+        #     urgent_status = "critical-metric" if urgent_positions > 2 else "warning-metric" if urgent_positions > 0 else "good-metric"
+        #     st.markdown(f"""
+        #     <div class="metric-card">
+        #         <div class="metric-label">🚨 URGENT TREATMENT</div>
+        #         <div class="metric-value {urgent_status}">{urgent_positions}</div>
+        #         <p>Positions need immediate work</p>
+        #         <div class="metric-subtitle">Critical priority</div>
+        #     </div>
+        #     """, unsafe_allow_html=True)
         
         # Hide STI chart for both spaces (STI data quality issues)
         # Position comparison chart
@@ -786,21 +786,20 @@ class AcousticDashboard:
             # Studio 8 has STI data
             avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
             worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
-            geometry_info = "The dual-zone geometry (Zone A: set volume, Zone B: ceiling cavity) creates modal congestion"
             
             return f"""
             <div class="problem-highlight">
                 <h3>PRODUCTION IMPACT - {space}</h3>
                 <ul>
-                    <li><strong>Speech Intelligibility Crisis:</strong> {avg_sti_degradation:.1f}% average STI degradation from reference standard</li>
-                    <li><strong>Worst Performance Area:</strong> {worst_position['position']} position with {worst_position['sti_degradation_percent']:.1f}% degradation</li>
-                    <li><strong>Critical Treatment Needed:</strong> {critical_positions} positions require immediate intervention</li>
-                    <li><strong>Broadcast Standards Risk:</strong> Performance below EBU R128 and ATSC A/85 quality requirements</li>
-                    <li><strong>Professional Impact:</strong> {geometry_info} that degrades speech clarity</li>
-                    <li><strong>Viewer Experience Impact:</strong> Poor audio clarity directly affects audience engagement and retention</li>
-                    <li><strong>Regulatory Compliance:</strong> Current performance compromises broadcast quality standards</li>
+                    <li><strong>Severe Corner Loading Effects:</strong> Corner positions exhibit 25-34% STI degradation with extreme nulls exceeding 24dB in critical speech frequencies</li>
+                    <li><strong>Modal Congestion Crisis:</strong> 14+ critical frequency stacks in 20-250Hz range from dual-zone geometry (Zone A set + Zone B ceiling cavity)</li>
+                    <li><strong>Speech Clarity Breakdown:</strong> {avg_sti_degradation:.1f}% average STI degradation with {worst_position['position']} showing {worst_position['sti_degradation_percent']:.1f}% degradation</li>
+                    <li><strong>Host Position Limitations:</strong> Only Host Position A remains usable, but still requires extensive EQ correction (125Hz peak, 1250Hz dip)</li>
+                    <li><strong>Professional Credibility Risk:</strong> Current acoustic environment produces "extremely poor" speech intelligibility in broadcast-critical areas</li>
+                    <li><strong>Equipment Placement Crisis:</strong> All corner positions and ceiling locations must be avoided until treatment completion</li>
+                    <li><strong>Post-Production Burden:</strong> Extensive corrective EQ and processing required, compromising natural sound quality</li>
                 </ul>
-                <p><strong>Critical Risk Assessment:</strong> Professional credibility, audience retention, and regulatory compliance at risk. Immediate acoustic treatment required to achieve broadcast-quality speech intelligibility for sports and magazine-style programming.</p>
+                <p><strong>Critical Assessment:</strong> Based on comprehensive Smaart frequency response analysis (225 data points, 8 positions), Studio 8 currently fails to meet professional broadcast standards. Immediate acoustic treatment is essential to transform this space into a broadcast-quality facility suitable for CBC's sports and magazine-style programming requirements.</p>
             </div>
             """
         else:
@@ -842,39 +841,88 @@ class AcousticDashboard:
         # Get treatment types breakdown
         treatment_types = treatment_data['treatment_type'].value_counts()
         
-        geometry_context = "dual-zone (Zone A: set volume, Zone B: ceiling cavity)" if space == "Studio 8" else "hexagonal with irregular angles (88° and 38°)"
-        
-        return f"""
-        <div class="solution-highlight">
-            <h3>RECOMMENDED SOLUTIONS - {space}</h3>
-            <ul>
-                <li><strong>Strategic Panel Placement ({total_panels} Total Panels):</strong>
-                    <ul>
-                        {''.join([f"<li>{count} positions require {treatment_type}</li>" for treatment_type, count in treatment_types.items()])}
-                        <li>Priority focus: {critical_positions} critical positions requiring immediate treatment</li>
-                        <li>Secondary treatment: {high_priority} high-priority positions</li>
-                    </ul>
-                </li>
-                <li><strong>Treatment Priority Sequence:</strong>
-                    <ul>
-                        <li>Phase 1: {critical_positions} critical positions (immediate intervention)</li>
-                        <li>Phase 2: {high_priority} high-priority positions (secondary wave)</li>
-                        <li>Phase 3: Remaining positions for optimal performance</li>
-                    </ul>
-                </li>
-                <li><strong>Technical Implementation:</strong>
-                    <ul>
-                        <li>Roxul panels (60kg/m³ density) for broadband absorption</li>
-                        <li>NRC ratings: 1.10-1.20 for maximum effectiveness</li>
-                        <li>Optimized for {geometry_context} geometry</li>
-                        <li>Coverage: 30-40% surface area for optimal balance</li>
-                    </ul>
-                </li>
-                <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ $30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
-                <li><strong>Expected Performance:</strong> Professional broadcast standards, EBU R128 compliance, optimized speech intelligibility</li>
-            </ul>
-        </div>
-        """
+        if space == "Studio 8":
+            return f"""
+            <div class="solution-highlight">
+                <h3>RECOMMENDED SOLUTIONS - {space}</h3>
+                <ul>
+                    <li><strong>Priority 1 - Corner Bass Traps (URGENT):</strong>
+                        <ul>
+                            <li>4 corner locations with 5.5" thick mineral wool panels (floor-to-ceiling)</li>
+                            <li>Target: 100-500Hz primary, extend to 2kHz for broadband control</li>
+                            <li>Focus: NE corner (worst performance), then SE and SW corners</li>
+                            <li>Expected: 15-20dB improvement in problem frequencies</li>
+                        </ul>
+                    </li>
+                    <li><strong>Priority 2 - Modal Control System:</strong>
+                        <ul>
+                            <li>Strategic wall absorption for first reflections and modal pressure points</li>
+                            <li>Target: 125Hz room mode (9ft dimension) and 315Hz secondary resonance</li>
+                            <li>North wall placement (off-camera) for optimal speech clarity</li>
+                        </ul>
+                    </li>
+                    <li><strong>Priority 3 - Ceiling Cloud Treatment:</strong>
+                        <ul>
+                            <li>Zone B ceiling cavity treatment to reduce modal congestion from above</li>
+                            <li>6-8 center ceiling panels above lighting grid</li>
+                            <li>2-inch absorptive panels with air gap for mid-frequency control</li>
+                        </ul>
+                    </li>
+                    <li><strong>Strategic Equipment Optimization:</strong>
+                        <ul>
+                            <li>Primary host position: Host Position A (best measured response)</li>
+                            <li>Avoid: All corner positions and ceiling-mounted equipment</li>
+                            <li>EQ correction: 125Hz peak (-6dB), 1250Hz boost (+3dB), HF shelf (+2-3dB)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ $30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
+                    <li><strong>Expected Transformation:</strong> 
+                        <ul>
+                            <li>Speech intelligibility improvement: 15-20dB in critical areas</li>
+                            <li>Professional broadcast quality meeting EBU R128 standards</li>
+                            <li>Reduced post-production EQ requirements</li>
+                            <li>Elimination of acoustic fatigue for talent and crew</li>
+                        </ul>
+                    </li>
+                </ul>
+                <p><strong>Implementation Note:</strong> Based on July 15 comprehensive Smaart measurements (225 data points), this phased approach transforms Studio 8 from "poor to fair" current rating to professional broadcast-grade facility optimized for CBC's sports and magazine-style programming.</p>
+            </div>
+            """
+        else:
+            # Keep existing Hub logic
+            geometry_context = "hexagonal with irregular angles (88° and 38°)"
+            
+            return f"""
+            <div class="solution-highlight">
+                <h3>RECOMMENDED SOLUTIONS - {space}</h3>
+                <ul>
+                    <li><strong>Strategic Panel Placement ({total_panels} Total Panels):</strong>
+                        <ul>
+                            {''.join([f"<li>{count} positions require {treatment_type}</li>" for treatment_type, count in treatment_types.items()])}
+                            <li>Priority focus: {critical_positions} critical positions requiring immediate treatment</li>
+                            <li>Secondary treatment: {high_priority} high-priority positions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Treatment Priority Sequence:</strong>
+                        <ul>
+                            <li>Phase 1: {critical_positions} critical positions (immediate intervention)</li>
+                            <li>Phase 2: {high_priority} high-priority positions (secondary wave)</li>
+                            <li>Phase 3: Remaining positions for optimal performance</li>
+                        </ul>
+                    </li>
+                    <li><strong>Technical Implementation:</strong>
+                        <ul>
+                            <li>Roxul panels (60kg/m³ density) for broadband absorption</li>
+                            <li>NRC ratings: 1.10-1.20 for maximum effectiveness</li>
+                            <li>Optimized for {geometry_context} geometry</li>
+                            <li>Coverage: 30-40% surface area for optimal balance</li>
+                        </ul>
+                    </li>
+                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ $30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
+                    <li><strong>Expected Performance:</strong> Professional broadcast standards, optimized reverberation control</li>
+                </ul>
+            </div>
+            """
 
 # Main application
 def main():
