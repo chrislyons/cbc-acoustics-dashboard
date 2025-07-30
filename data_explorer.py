@@ -257,18 +257,18 @@ class DataExplorer:
         if selected_space is None:
             selected_space = "Studio 8"
         
-        # Smart default selection - prioritize Modal Stack for each space
+        # Smart default selection - prioritize Complete Frequency Response for each space
         def get_smart_defaults(selected_space):
             """Get smart default file selection based on selected space"""
             defaults = []
             file_list = list(space_filtered_datasets.keys())
             
-            # Priority 1: Modal Stack Analysis for the selected space
-            modal_files = [f for f in file_list if "Modal_Stack" in f]
-            if modal_files:
-                # Get the latest modal stack file for this space
-                modal_files.sort(reverse=True)
-                defaults.append(modal_files[0])
+            # Priority 1: Complete Frequency Response for the selected space
+            complete_freq_files = [f for f in file_list if "Complete_Frequency_Response" in f]
+            if complete_freq_files:
+                # Get the latest complete frequency response file for this space
+                complete_freq_files.sort(reverse=True)
+                defaults.append(complete_freq_files[0])
             
             return defaults
         
@@ -282,17 +282,33 @@ class DataExplorer:
             st.write("**Select datasets to view:**")
             selected_files = []
             
-            # Filter available datasets by selected space
+            # Filter available datasets by selected space and exclude unwanted datasets
             space_filtered_datasets = {}
             for filename, df in self.datasets.items():
+                # Skip Treatment Priority Matrix dataset
+                if "Treatment_Priority" in filename:
+                    continue
                 if 'Space' in df.columns and selected_space in df['Space'].values:
                     space_filtered_datasets[filename] = df
             
             # Get smart defaults for this specific space
             smart_defaults = get_smart_defaults(selected_space)
             
-            # Simple list of datasets with clean names
-            for filename in list(space_filtered_datasets.keys()):
+            # Simple list of datasets with clean names - Complete Frequency Response first
+            file_list = list(space_filtered_datasets.keys())
+            
+            # Sort to prioritize Complete Frequency Response at the top
+            def sort_priority(filename):
+                if "Complete_Frequency_Response" in filename:
+                    return 0  # Highest priority
+                elif "Modal_Stack" in filename:
+                    return 1  # Second priority
+                else:
+                    return 2  # Other files
+            
+            sorted_files = sorted(file_list, key=sort_priority)
+            
+            for filename in sorted_files:
                 friendly_name = self.dataset_friendly_names.get(filename, filename)
                 # Remove space prefix from friendly name since space is already selected
                 display_name = friendly_name.replace(f"{selected_space} - ", "")
@@ -337,13 +353,16 @@ class DataExplorer:
         
         # Display the filtered table
         
-        # Add column selection
+        # Add column selection (HIDDEN - uncomment to re-enable)
         available_columns = [col for col in combined_df.columns if col not in ['Source File', 'Dataset Type', 'Space', 'Timestamp']]
-        selected_columns = st.multiselect(
-            "Select columns to display:",
-            options=available_columns,
-            default=available_columns[:10] if len(available_columns) > 10 else available_columns
-        )
+        # selected_columns = st.multiselect(
+        #     "Select columns to display:",
+        #     options=available_columns,
+        #     default=available_columns[:10] if len(available_columns) > 10 else available_columns
+        # )
+        
+        # Show all columns by default when column selector is hidden
+        selected_columns = available_columns
         
         if selected_columns:
             # Reorder columns: Space first, then selected columns, then Dataset Type, then Source File last
@@ -353,10 +372,16 @@ class DataExplorer:
             # Simple dataframe without custom alignment
             column_config = {}
             
+            # Calculate safe height to prevent Canvas errors
+            # Streamlit/Canvas max safe height is ~32,767px (2^15 - 1)
+            max_safe_height = 32000  # Leave some margin below the limit
+            calculated_height = len(display_df) * 35 + 38
+            safe_height = min(calculated_height, max_safe_height)
+            
             st.dataframe(
                 display_df, 
                 use_container_width=True,
-                height=len(display_df) * 35 + 38,  # Dynamic height: ~35px per row + header
+                height=safe_height,
                 column_config=column_config
             )
             
