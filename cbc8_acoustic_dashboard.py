@@ -296,7 +296,7 @@ class AcousticDashboard:
             if hasattr(st.session_state, 'cached_rt60_fig'):
                 st.session_state.cached_rt60_fig = None
             # Reset panel count to space-appropriate default
-            default_count = 10 if selected_space == "The Hub" else 25
+            default_count = 0 if selected_space == "The Hub" else 25
             st.session_state.panel_count = default_count
             # Force rerun to refresh all components
             st.rerun()
@@ -516,12 +516,15 @@ class AcousticDashboard:
         header_col1, header_col2 = st.columns([1, 1])
         
         with header_col1:
-            st.info("🎯 **Interactive 3D Model:** Rotate, zoom, and click on measurement positions to explore the acoustic space")
+            if space == "The Hub":
+                st.info("🎯 **Interactive 3D Model [In Progress]**")
+            else:
+                st.info("🎯 **Interactive 3D Model:** Rotate, zoom, and click on measurement positions to explore the acoustic space")
         
         with header_col2:
             # Initialize panel count in session state with space-specific defaults
             if 'panel_count' not in st.session_state:
-                default_count = 10 if space == "The Hub" else 25
+                default_count = 0 if space == "The Hub" else 25
                 st.session_state.panel_count = default_count
             
             # Panel count text input only (matching Frequency Analysis page style)
@@ -622,7 +625,7 @@ class AcousticDashboard:
                 st.markdown("""
                 **RT60 Analysis Coming Soon**
                 
-                The Hub's hexagonal geometry with irregular angles (88° and 38°) creates unique acoustic challenges:
+                The Hub's irregular angular geometry with the curved WEST glass wall creates unique acoustic challenges:
                 
                 - Complex reflection patterns from non-parallel surfaces
                 - Modal frequencies influenced by hexagonal dimensions  
@@ -811,7 +814,7 @@ class AcousticDashboard:
             # The Hub - no STI data, focus on RT60 issues
             worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
             avg_rt60_increase = evidence_data['RT60_500Hz_increase_percent'].mean()
-            geometry_info = "The hexagonal geometry with irregular angles (88° and 38°) creates complex reflection patterns"
+            geometry_info = "The irregular angular geometry with curved WEST glass wall creates complex reflection patterns"
             
             return f"""
             <div class="problem-highlight">

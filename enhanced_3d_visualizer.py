@@ -324,17 +324,17 @@ class Enhanced3DVisualizer:
         return fig
     
     def create_hub_detailed_model(self, show_panels=True, panel_count=10):
-        """Create detailed Hub model with treatment visualization based on actual floorplan"""
+        """Create detailed Hub model with treatment visualization based on corrected actual measurements"""
         
-        # Hub dimensions from actual floorplan (feet)
-        hub_width = 15.83  # 190" converted to feet
-        hub_height = 12.5  # 150" from floor
-        grid_height = 12.5  # 150" pipe grid height
+        # Hub dimensions from corrected measurements (converting inches to feet)
+        # Based on actual measurements: Red 83", Blue 104", Green 72", Purple 140", Orange 60", Orange>Red 246"
+        ceiling_height = 106 / 12.0  # 106" = 8.83 feet to hung ceiling
+        grid_height = 101 / 12.0     # 101" = 8.42 feet to grid
         
         fig = go.Figure()
         
-        # Add accurate Hub room structure based on floorplan
-        self._add_hub_structure_accurate(fig, hub_width, hub_height, grid_height)
+        # Add accurate Hub room structure based on corrected measurements
+        self._add_hub_structure_corrected(fig, ceiling_height, grid_height)
         
         # Measurement positions for Hub based on PDF floorplan layout
         positions = {
@@ -350,13 +350,13 @@ class Enhanced3DVisualizer:
         
         # Add acoustic treatment panels if requested
         if show_panels:
-            self._add_treatment_panels_hub_accurate(fig, panel_count, hub_width, hub_height, grid_height)
+            self._add_treatment_panels_hub_corrected(fig, panel_count, ceiling_height, grid_height)
         
         # Hide set build furniture for now - will fix later  
-        # self._add_hub_furniture_accurate(fig, hub_width)
+        # self._add_hub_furniture_corrected(fig)
         
         fig.update_layout(
-            title="The Hub - Detailed 3D Model with Acoustic Treatment (Accurate Floorplan)",
+            title="The Hub - Detailed 3D Model with Acoustic Treatment (Corrected Dimensions)",
             scene=dict(
                 xaxis_title="(feet)",
                 yaxis_title="(feet)", 
@@ -371,30 +371,57 @@ class Enhanced3DVisualizer:
         
         return fig
     
-    def _add_hub_structure_accurate(self, fig, width, height, grid_height):
-        """Add accurate Hub room structure based on floorplan"""
+    def _add_hub_structure_corrected(self, fig, ceiling_height, grid_height):
+        """Add Hub room structure based on corrected actual measurements"""
         import numpy as np
         
-        # Create accurate Hub shape based on floorplan
-        # The Hub is an irregular trapezoidal/pentagonal shape, not hexagonal
-        # Based on 190" width, with 88° and 38° angles
+        # Convert measurements from inches to feet for coordinate system
+        # Cardinal directions: NORTH=Red 83", NORTHWEST=Blue 104", WEST=Orange>Red 246" (glass wall), SOUTHWEST=Purple 140", SOUTH=Orange 60", EAST=Green 72"
+        north = 83 / 12.0      # 6.92 feet (Red wall)
+        northwest = 104 / 12.0 # 8.67 feet (Blue wall)
+        west = 246 / 12.0      # 20.50 feet (Orange>Red glass wall - curves outward)
+        southwest = 140 / 12.0 # 11.67 feet (Purple wall)
+        south = 60 / 12.0      # 5.00 feet (Orange wall)
+        east = 72 / 12.0       # 6.00 feet (Green wall)
         
-        # Define the actual Hub shape coordinates based on PDF floorplan
-        # The Hub has a distinctive diagonal cut creating the 88° and 38° angles
-        # Using coordinate system with (0,0) at approximate center
+        # The Hub is an irregular hexagonal shape based on your diagram
+        # Working from your corrected measurements and the photo view from the doorway (orange wall)
+        # Creating vertices starting from the orange wall (bottom) and going clockwise
         
-        # Based on PDF: 190" wide base, with diagonal cuts creating irregular shape
-        # Define vertices more accurately based on floorplan geometry
+        # Place origin at approximate center of the space for better visualization
+        center_x = 0
+        center_y = 0
+        
+        # Starting from south wall (bottom, facing into room from doorway) and going clockwise
+        # The room is wider at the southwest (purple wall area) and narrows toward the south
         hub_vertices = [
-            [-7.9, -3.5],           # Bottom left corner (190" = ~16' total width)
-            [7.9, -3.5],            # Bottom right corner (straight 190" wall)
-            [6.5, -1.0],            # Start of 38° angled cut (right side)
-            [4.5, 2.0],             # End of 38° angled cut
-            [3.0, 4.5],             # Top right area
-            [-2.5, 5.0],            # Top center-left
-            [-6.0, 3.5],            # Start of 88° angled cut (left side)  
-            [-7.5, 1.0],            # End of 88° angled cut
-            [-8.2, -1.5],           # Left side back toward bottom
+            # South wall (bottom) - 60" wide
+            [-south/2, -southwest/2 + 2],      # Bottom left of south wall
+            [south/2, -southwest/2 + 2],       # Bottom right of south wall
+            
+            # Transition to east side - North wall area (83")  
+            [south/2 + 2, -southwest/2 + 2 + north/3],    # Start of east angled wall
+            [south/2 + 3, -southwest/2 + 2 + 2*north/3],  # Mid east angled wall
+            [south/2 + 2, -southwest/2 + 2 + north],      # End of east angled wall
+            
+            # WEST wall (Orange>Red 246") - bisected into three sections
+            # This is the Southwest wall area (140" - the longest dimension) 
+            [southwest/2, east/2],                              # Right end of west wall
+            
+            # Section 1: Right third to middle (diagonal connection)
+            [southwest/4, east/2 + 1],                          # First diagonal section
+            
+            # Section 2: Middle section moved outward by 2 feet  
+            [0, east/2 + 2],                                    # Middle section bulges out 2 feet
+            
+            # Section 3: Middle to left third (diagonal connection)
+            [-southwest/4, east/2 + 1],                         # Second diagonal section
+            
+            [-southwest/2, east/2],                             # Left end of west wall  
+            
+            # Left side transition - Northwest area (104")
+            [-south/2 - 3, -southwest/2 + 2 + northwest/2],  # Left angled wall
+            [-south/2 - 2, -southwest/2 + 2 + northwest/4],  # Left angled wall continuation
         ]
         
         # Close the shape
@@ -412,7 +439,7 @@ class Enhanced3DVisualizer:
         ))
         
         # Ceiling outline
-        ceiling_z = [height] * len(hub_x)
+        ceiling_z = [ceiling_height] * len(hub_x)
         fig.add_trace(go.Scatter3d(
             x=hub_x, y=hub_y, z=ceiling_z,
             mode='lines',
@@ -421,18 +448,54 @@ class Enhanced3DVisualizer:
             showlegend=False
         ))
         
-        # Vertical edges
+        # Vertical edges with door opening on north wall
         for i in range(len(hub_x)-1):  # -1 because last point duplicates first
-            fig.add_trace(go.Scatter3d(
-                x=[hub_x[i], hub_x[i]], 
-                y=[hub_y[i], hub_y[i]], 
-                z=[0, height],
-                mode='lines',
-                line=dict(color=self.colors['room_structure'], width=4),
-                showlegend=False
-            ))
+            # Skip vertical edge where door opening should be (between points 4 and 5 on north wall)
+            if i == 4:  # This is the north wall area where door opening is
+                # Add door opening by creating partial vertical edges
+                door_height = 7  # 7 feet high door
+                
+                # Vertical edge up to door height
+                fig.add_trace(go.Scatter3d(
+                    x=[hub_x[i], hub_x[i]], 
+                    y=[hub_y[i], hub_y[i]], 
+                    z=[0, door_height],
+                    mode='lines',
+                    line=dict(color=self.colors['room_structure'], width=4),
+                    showlegend=False
+                ))
+                
+                # Vertical edge from door top to ceiling
+                fig.add_trace(go.Scatter3d(
+                    x=[hub_x[i], hub_x[i]], 
+                    y=[hub_y[i], hub_y[i]], 
+                    z=[door_height, ceiling_height],
+                    mode='lines',
+                    line=dict(color=self.colors['room_structure'], width=4),
+                    showlegend=False
+                ))
+                
+                # Door frame top (horizontal)
+                fig.add_trace(go.Scatter3d(
+                    x=[hub_x[i], hub_x[i+1]], 
+                    y=[hub_y[i], hub_y[i+1]], 
+                    z=[door_height, door_height],
+                    mode='lines',
+                    line=dict(color=self.colors['room_structure'], width=4),
+                    showlegend=False
+                ))
+            else:
+                # Normal vertical edge
+                fig.add_trace(go.Scatter3d(
+                    x=[hub_x[i], hub_x[i]], 
+                    y=[hub_y[i], hub_y[i]], 
+                    z=[0, ceiling_height],
+                    mode='lines',
+                    line=dict(color=self.colors['room_structure'], width=4),
+                    showlegend=False
+                ))
         
-        # Add pipe grid at 150" (12.5 feet) - shown as translucent plane
+        # Add pipe grid at corrected height (101" = 8.42 feet) - shown as translucent plane
         grid_x = np.linspace(min(hub_x), max(hub_x), 10)
         grid_y = np.linspace(min(hub_y), max(hub_y), 8)
         X, Y = np.meshgrid(grid_x, grid_y)
@@ -442,71 +505,139 @@ class Enhanced3DVisualizer:
             x=X, y=Y, z=Z,
             colorscale=[[0, 'rgba(0, 255, 0, 0.2)'], [1, 'rgba(0, 255, 0, 0.2)']],
             opacity=0.3,
-            name='Pipe Grid (150")',
+            name=f'Pipe Grid (101" = {grid_height:.1f}\')',
             showlegend=True,
             showscale=False,
-            hovertemplate="Pipe Grid<br>Height: 150\" (12.5')<extra></extra>"
+            hovertemplate=f"Pipe Grid<br>Height: 101\" ({grid_height:.1f}')<extra></extra>"
+        ))
+        
+        # Add cardinal direction labels at floor level, hovering outside the space
+        # Calculate approximate center and extents of the Hub
+        center_x = sum(hub_x[:-1]) / len(hub_x[:-1])  # Exclude duplicate closing point
+        center_y = sum(hub_y[:-1]) / len(hub_y[:-1])
+        max_x = max(hub_x)
+        min_x = min(hub_x)
+        max_y = max(hub_y)
+        min_y = min(hub_y)
+        
+        # North (Red letters) - rotated 90deg clockwise
+        fig.add_trace(go.Scatter3d(
+            x=[max_x + 3], y=[center_y], z=[0],
+            mode='text', text=["N"], textfont=dict(size=18, color='red'),
+            showlegend=False, hoverinfo='skip'
+        ))
+        
+        # East (Red letters) - rotated 90deg clockwise
+        fig.add_trace(go.Scatter3d(
+            x=[center_x], y=[min_y - 3], z=[0],
+            mode='text', text=["E"], textfont=dict(size=18, color='red'),
+            showlegend=False, hoverinfo='skip'
+        ))
+        
+        # South (Red letters) - rotated 90deg clockwise
+        fig.add_trace(go.Scatter3d(
+            x=[min_x - 3], y=[center_y], z=[0],
+            mode='text', text=["S"], textfont=dict(size=18, color='red'),
+            showlegend=False, hoverinfo='skip'
+        ))
+        
+        # West (Red letters) - rotated 90deg clockwise
+        fig.add_trace(go.Scatter3d(
+            x=[center_x], y=[max_y + 3], z=[0],
+            mode='text', text=["W"], textfont=dict(size=18, color='red'),
+            showlegend=False, hoverinfo='skip'
         ))
     
-    def _add_treatment_panels_hub_accurate(self, fig, panel_count, width, height, grid_height):
-        """Add acoustic treatment panels optimized for actual Hub geometry"""
+    def _add_treatment_panels_hub_corrected(self, fig, panel_count, ceiling_height, grid_height):
+        """Add acoustic treatment panels with proper constraints for The Hub"""
         
         panels_used = 0
         
-        # Priority 1: Corner bass traps at critical acoustic corners
-        corner_positions = [
-            {"pos": [6, -3, height-2], "name": "SE Corner Bass Trap"},      # Right corner
-            {"pos": [-6, 4, height-2], "name": "NW Corner Bass Trap"},      # Left angled corner
-            {"pos": [6, 3, height-2], "name": "NE Corner Bass Trap"},       # Top right
-            {"pos": [-6, -2, height-2], "name": "SW Corner Bass Trap"}      # Bottom left
+        # Priority 1: Ceiling panels - ONLY location available, hanging 2" below grid
+        ceiling_panel_height = grid_height - (2/12)  # 2" below grid (convert to feet)
+        
+        # Limited ceiling space - can only fit a few panels without stacking
+        ceiling_panels = [
+            {"pos": [0, 0, ceiling_panel_height], "name": "Center Ceiling Panel"},
+            {"pos": [-2, 1, ceiling_panel_height], "name": "NW Area Ceiling Panel"},
+            {"pos": [2, -1, ceiling_panel_height], "name": "East Area Ceiling Panel"},
         ]
         
-        for i, corner in enumerate(corner_positions[:min(4, panel_count)]):
+        ceiling_count = min(len(ceiling_panels), panel_count)
+        for i in range(ceiling_count):
+            pos_data = ceiling_panels[i]
             self._create_rectangular_panel(
-                fig, corner['pos'], 3.0, 2.0, 5.5,
-                self.colors['bass_trap'], corner['name'],
-                "Corner bass trap - Modal control", 'horizontal'
+                fig, pos_data['pos'], 2.0, 4.0, 5.5,
+                self.colors['absorption_panel'], pos_data['name'],
+                "Ceiling panel - hanging 2\" below grid", 'horizontal'
             )
-        panels_used = min(4, panel_count)
+        panels_used += ceiling_count
         
-        # Priority 2: Ceiling panels above set build area
-        if panel_count > 4:
-            ceiling_panels = [
-                {"pos": [-2, 1, height-1], "name": "Set Build Ceiling Panel"},     # Above set build
-                {"pos": [0, 0, height-1], "name": "Center Ceiling Panel"},         # Room center
-                {"pos": [3, -1, height-1], "name": "East Ceiling Panel"},          # Right side
-                {"pos": [-4, 2, height-1], "name": "West Ceiling Panel"},          # Left side
-                {"pos": [1, 2, height-1], "name": "North Ceiling Panel"}           # Top area
+        # Priority 2: Corner bass traps - straddling corners like Studio 8, hanging vertically
+        if panel_count > panels_used:
+            # Only corners that are NOT on-camera (avoid SW corner area)
+            # Based on cardinal labels: N=right, E=bottom, S=left, W=top
+            corner_traps = [
+                # Northeast corner - where North (right) meets East (bottom)
+                {"pos": [4.0, -2.5, 5], "name": "NE Corner Bass Trap", "corner_type": "NE"},
+                # Northwest corner - where North (right) meets West (top)
+                {"pos": [3.5, 4.0, 5], "name": "NW Corner Bass Trap", "corner_type": "NW"},
             ]
             
-            ceiling_count = min(5, panel_count - panels_used)
-            for i in range(ceiling_count):
-                pos_data = ceiling_panels[i]
-                self._create_rectangular_panel(
-                    fig, pos_data['pos'], 2.0, 4.0, 5.5,
-                    self.colors['absorption_panel'], pos_data['name'],
-                    "Ceiling absorption panel", 'horizontal'
-                )
-            panels_used += ceiling_count
+            corner_count = min(len(corner_traps), panel_count - panels_used)
+            for i in range(corner_count):
+                trap = corner_traps[i]
+                # Vertical corner bass traps 
+                if trap['corner_type'] == 'NW':
+                    # NW trap rotated 90deg to be flush with wall
+                    self._create_rectangular_panel(
+                        fig, trap['pos'], 2.0, 4.0, 5.5,
+                        self.colors['bass_trap'], trap['name'],
+                        "Corner bass trap - flush with wall", 'corner-135deg'
+                    )
+                else:
+                    # NE trap brought inside space
+                    self._create_rectangular_panel(
+                        fig, trap['pos'], 2.0, 4.0, 5.5,
+                        self.colors['bass_trap'], trap['name'],
+                        "Corner bass trap - inside space", 'corner-45deg'
+                    )
+            panels_used += corner_count
         
-        # Priority 3: Wall panels on straight sections
-        if panel_count > 9:
+        # Priority 3: Wall panels - AVOID SW corner (on-camera), only remaining walls
+        # Ensure panels stay within room boundaries
+        # Based on cardinal labels: N=right, E=bottom, S=left, W=top
+        if panel_count > panels_used:
             wall_panels = [
-                {"pos": [7, -3, 6], "name": "East Wall Panel"},                    # Right straight wall
-                {"pos": [-7, 3, 6], "name": "West Wall Panel"},                    # Left area
-                {"pos": [2, 4, 6], "name": "North Wall Panel"},                    # Top wall
-                {"pos": [-2, -3, 6], "name": "South Wall Panel"}                   # Bottom wall
+                # East wall panels - on the EAST wall (bottom in coordinate system, negative Y)
+                {"pos": [0, -3.5, 3], "name": "East Wall Panel 1", "orientation": "east-wall"},
+                {"pos": [0, -3.5, 6], "name": "East Wall Panel 2", "orientation": "east-wall"},
+                
+                # North wall panel - on the NORTH wall (right in coordinate system, positive X)
+                {"pos": [4.5, 0, 4], "name": "North Wall Panel 1", "orientation": "north-wall"},
             ]
             
-            wall_count = min(len(wall_panels), panel_count - panels_used)
-            for i in range(wall_count):
+            available_wall_panels = min(len(wall_panels), panel_count - panels_used)
+            for i in range(available_wall_panels):
                 pos_data = wall_panels[i]
-                self._create_rectangular_panel(
-                    fig, pos_data['pos'], 2.0, 4.0, 3.0,
-                    self.colors['absorption_panel'], pos_data['name'],
-                    "Wall absorption panel", 'vertical-long-wall'
-                )
-            panels_used += wall_count
+                orientation = pos_data['orientation']
+                
+                # Make panels parallel to their respective walls 
+                if orientation == "east-wall":
+                    # East wall panels - on east wall (bottom in coordinate system)
+                    self._create_rectangular_panel(
+                        fig, pos_data['pos'], 4.0, 2.0, 3.0,
+                        self.colors['absorption_panel'], pos_data['name'],
+                        "East wall panel", 'vertical-short-wall'
+                    )
+                elif orientation == "north-wall":
+                    # North wall panel - on north wall (right in coordinate system)
+                    self._create_rectangular_panel(
+                        fig, pos_data['pos'], 2.0, 4.0, 3.0,
+                        self.colors['absorption_panel'], pos_data['name'],
+                        "North wall panel", 'vertical-long-wall'
+                    )
+            panels_used += available_wall_panels
     
     def _add_hub_furniture_accurate(self, fig, width):
         """Add Hub furniture based on actual PDF floorplan"""
