@@ -365,8 +365,15 @@ class DataExplorer:
         selected_columns = available_columns
         
         if selected_columns:
-            # Reorder columns: Space first, then selected columns, then Dataset Type, then Source File last
-            column_order = ['Space'] + selected_columns + ['Dataset Type', 'Source File']
+            # Move Plot Color out of selected_columns if present
+            selected_columns_without_color = [col for col in selected_columns if col != 'Plot Color']
+            
+            # Reorder columns: Space first, then selected columns, then Plot Color (third from right), then Dataset Type, then Source File last
+            column_order = ['Space'] + selected_columns_without_color
+            if 'Plot Color' in combined_df.columns:
+                column_order += ['Plot Color']
+            column_order += ['Dataset Type', 'Source File']
+            
             display_df = combined_df[column_order]
             
             # Additional Canvas protection - clean data and limit rows
@@ -384,15 +391,21 @@ class DataExplorer:
             # Apply styling if Plot Color column exists
             if 'Plot Color' in display_df.columns:
                 def apply_row_colors(row):
-                    """Apply hex color from Plot Color column as row background"""
+                    """Apply hex color from Plot Color column as row background with 33% opacity"""
                     color = row.get('Plot Color', '')
                     if color and isinstance(color, str) and color.startswith('#'):
-                        return [f'background-color: {color}'] * len(row)
-                    else:
-                        return [''] * len(row)
+                        # Convert hex to rgba with 33% opacity (0.33)
+                        hex_color = color.lstrip('#')
+                        if len(hex_color) == 6:
+                            r = int(hex_color[0:2], 16)
+                            g = int(hex_color[2:4], 16)
+                            b = int(hex_color[4:6], 16)
+                            rgba_color = f'rgba({r}, {g}, {b}, 0.33)'
+                            return [f'background-color: {rgba_color}'] * len(row)
+                    return [''] * len(row)
                 
-                # Apply styling and hide Plot Color column
-                styled_df = display_df.style.apply(apply_row_colors, axis=1).hide(columns=['Plot Color'])
+                # Apply styling - keep Plot Color column visible
+                styled_df = display_df.style.apply(apply_row_colors, axis=1)
                 
                 # Calculate safe height to prevent Canvas errors
                 max_safe_height = min(len(display_df) * 35 + 38, 15000)
