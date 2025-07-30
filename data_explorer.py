@@ -369,19 +369,29 @@ class DataExplorer:
             column_order = ['Space'] + selected_columns + ['Dataset Type', 'Source File']
             display_df = combined_df[column_order]
             
+            # Additional Canvas protection - clean data and limit rows
+            # Clean numeric columns of problematic values
+            numeric_columns = display_df.select_dtypes(include=['float64', 'int64']).columns
+            for col in numeric_columns:
+                display_df[col] = display_df[col].replace([float('inf'), float('-inf')], None)
+                display_df[col] = display_df[col].fillna(0)
+            
+            # Limit rows to prevent Canvas overflow (max ~900 rows for safety)
+            max_safe_rows = 900
+            if len(display_df) > max_safe_rows:
+                display_df = display_df.head(max_safe_rows)
+            
             # Simple dataframe without custom alignment
             column_config = {}
             
             # Calculate safe height to prevent Canvas errors
-            # Streamlit/Canvas max safe height is ~32,767px (2^15 - 1)
-            max_safe_height = 32000  # Leave some margin below the limit
-            calculated_height = len(display_df) * 35 + 38
-            safe_height = min(calculated_height, max_safe_height)
+            # More conservative height limit after row limiting
+            max_safe_height = min(len(display_df) * 35 + 38, 15000)  # More conservative limit
             
             st.dataframe(
                 display_df, 
                 use_container_width=True,
-                height=safe_height,
+                height=max_safe_height,
                 column_config=column_config
             )
             
