@@ -381,19 +381,41 @@ class DataExplorer:
             if len(display_df) > max_safe_rows:
                 display_df = display_df.head(max_safe_rows)
             
-            # Simple dataframe without custom alignment
-            column_config = {}
-            
-            # Calculate safe height to prevent Canvas errors
-            # More conservative height limit after row limiting
-            max_safe_height = min(len(display_df) * 35 + 38, 15000)  # More conservative limit
-            
-            st.dataframe(
-                display_df, 
-                use_container_width=True,
-                height=max_safe_height,
-                column_config=column_config
-            )
+            # Apply styling if Plot Color column exists
+            if 'Plot Color' in display_df.columns:
+                def apply_row_colors(row):
+                    """Apply hex color from Plot Color column as row background"""
+                    color = row.get('Plot Color', '')
+                    if color and isinstance(color, str) and color.startswith('#'):
+                        return [f'background-color: {color}'] * len(row)
+                    else:
+                        return [''] * len(row)
+                
+                # Apply styling and hide Plot Color column
+                styled_df = display_df.style.apply(apply_row_colors, axis=1).hide(columns=['Plot Color'])
+                
+                # Calculate safe height to prevent Canvas errors
+                max_safe_height = min(len(display_df) * 35 + 38, 15000)
+                
+                st.dataframe(
+                    styled_df,
+                    use_container_width=True,
+                    height=max_safe_height
+                )
+            else:
+                # Fallback to simple dataframe without custom alignment
+                column_config = {}
+                
+                # Calculate safe height to prevent Canvas errors
+                # More conservative height limit after row limiting
+                max_safe_height = min(len(display_df) * 35 + 38, 15000)  # More conservative limit
+                
+                st.dataframe(
+                    display_df, 
+                    use_container_width=True,
+                    height=max_safe_height,
+                    column_config=column_config
+                )
             
             # Removed duplicate download button - keeping the one in header
         else:

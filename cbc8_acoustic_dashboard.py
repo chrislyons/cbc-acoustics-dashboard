@@ -650,7 +650,7 @@ class AcousticDashboard:
         max_rt60 = np.max(all_values)
         
         # Broadcast standard targets for Studio 8
-        target_min, target_max = 0.3, 0.5
+        target_min, target_max = 0.3, 0.4
         in_target = sum(1 for val in all_values if target_min <= val <= target_max)
         target_percentage = (in_target / len(all_values)) * 100
         
@@ -686,7 +686,7 @@ class AcousticDashboard:
             st.metric(
                 label="Average RT60",
                 value=f"{avg_rt60:.2f}s",
-                help="Target: 0.3-0.5s for broadcast quality"
+                help="Target: 0.3-0.4s for broadcast quality"
             )
             status_emoji = "✅" if target_min <= avg_rt60 <= target_max else "⚠️" if avg_rt60 > target_max else "🔍"
             st.write(f"{status_emoji} {'Good' if target_min <= avg_rt60 <= target_max else 'Adjust' if avg_rt60 > target_max else 'Monitor'}")
@@ -704,13 +704,13 @@ class AcousticDashboard:
             st.metric(
                 label="In Target Range",
                 value=f"{target_percentage:.0f}%",
-                help="Percentage of measurements within 0.3-0.5s target"
+                help="Percentage of measurements within 0.3-0.4s target"
             )
             target_emoji = "🎯" if target_percentage >= 80 else "📈" if target_percentage >= 60 else "🔧"
             st.write(f"{target_emoji} {'Excellent' if target_percentage >= 80 else 'Improving' if target_percentage >= 60 else 'Work Needed'}")
         
         # Footer info
-        st.info(f"**Target:** 0.3-0.5s for broadcast quality | **Panel Count:** {panel_count} panels")
+        st.info(f"**Target:** 0.3-0.4s for broadcast quality | **Panel Count:** {panel_count} panels")
     
     def render_frequency_analysis(self, space):
         """Render frequency analysis dashboard using specialized explorer"""
