@@ -859,18 +859,21 @@ class AcousticDashboard:
                             <li>Expected: 15-20dB improvement in problem frequencies</li>
                         </ul>
                     </li>
-                    <li><strong>Priority 2 - Modal Control System:</strong>
+                    <li><strong>Priority 2 - Ceiling Cloud Treatment:</strong>
+                        <ul>
+                            <li>Zone A (below grid) host position treatment to support optimal intelligibilty</li>
+                            <li>3-4 panels mounted at lighting grid height above desk</li>
+                            <li>Zone B (above grid) ceiling cavity treatment to reduce modal congestion from above</li>
+                            <li>6-8 center ceiling panels above lighting grid</li>
+                            <li>5.5-inch depth with air gap for low and mid-frequency control</li>
+                            <li>Provides more comprehensive spectrum coverage than folded drape</li>
+                        </ul>
+                    </li>
+                    <li><strong>Priority 3 - Modal Control System:</strong>
                         <ul>
                             <li>Strategic wall absorption for first reflections and modal pressure points</li>
                             <li>Target: 125Hz room mode (9ft dimension) and 315Hz secondary resonance</li>
-                            <li>North wall placement (off-camera) for optimal speech clarity</li>
-                        </ul>
-                    </li>
-                    <li><strong>Priority 3 - Ceiling Cloud Treatment:</strong>
-                        <ul>
-                            <li>Zone B ceiling cavity treatment to reduce modal congestion from above</li>
-                            <li>6-8 center ceiling panels above lighting grid</li>
-                            <li>2-inch absorptive panels with air gap for mid-frequency control</li>
+                            <li>North wall and NE corner placement (off-camera) for optimal speech clarity</li>
                         </ul>
                     </li>
                     <li><strong>Strategic Equipment Optimization:</strong>
@@ -923,7 +926,7 @@ class AcousticDashboard:
                             <li>Coverage: 30-40% surface area for optimal balance</li>
                         </ul>
                     </li>
-                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ $30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
+                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ ~$30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
                     <li><strong>Expected Performance:</strong> Professional broadcast standards, optimized reverberation control</li>
                 </ul>
             </div>

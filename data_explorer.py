@@ -245,7 +245,14 @@ class DataExplorer:
             })
         
         overview_df = pd.DataFrame(overview_data)
-        st.dataframe(overview_df, use_container_width=True)
+        
+        # Format numeric columns to 2 decimal places
+        styled_overview = overview_df.style
+        numeric_columns = overview_df.select_dtypes(include=['float64', 'int64']).columns
+        for col in numeric_columns:
+            styled_overview = styled_overview.format({col: '{:.2f}'})
+        
+        st.dataframe(styled_overview, use_container_width=True)
     
     def render_data_table(self, selected_space=None):
         """Render the main filterable data table"""
@@ -407,6 +414,12 @@ class DataExplorer:
                 # Apply styling - keep Plot Color column visible
                 styled_df = display_df.style.apply(apply_row_colors, axis=1)
                 
+                # Format numeric columns to 2 decimal places
+                numeric_columns = display_df.select_dtypes(include=['float64', 'int64']).columns
+                for col in numeric_columns:
+                    if col != 'Plot Color':  # Skip Plot Color column
+                        styled_df = styled_df.format({col: '{:.2f}'})
+                
                 # Calculate safe height to prevent Canvas errors
                 max_safe_height = min(len(display_df) * 35 + 38, 15000)
                 
@@ -419,12 +432,18 @@ class DataExplorer:
                 # Fallback to simple dataframe without custom alignment
                 column_config = {}
                 
+                # Format numeric columns to 2 decimal places
+                styled_df = display_df.style
+                numeric_columns = display_df.select_dtypes(include=['float64', 'int64']).columns
+                for col in numeric_columns:
+                    styled_df = styled_df.format({col: '{:.2f}'})
+                
                 # Calculate safe height to prevent Canvas errors
                 # More conservative height limit after row limiting
                 max_safe_height = min(len(display_df) * 35 + 38, 15000)  # More conservative limit
                 
                 st.dataframe(
-                    display_df, 
+                    styled_df, 
                     use_container_width=True,
                     height=max_safe_height,
                     column_config=column_config

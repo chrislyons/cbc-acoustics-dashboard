@@ -873,9 +873,22 @@ class Enhanced3DVisualizer:
                 )
             panels_used += north_panels
         
+        # Priority 4B: E Wall Panel in NE Corner (3") - Immediately downstream of N wall panels
+        # Single panel on E wall of NE corner to eliminate bare surface
+        if panel_count > 21:
+            e_wall_panel = {"pos": [room_width_EW-0.25, room_length_NS-3, 6], "name": "NE Corner E Wall Panel"}
+            
+            if panel_count - panels_used >= 1:
+                self._create_rectangular_panel(
+                    fig, e_wall_panel['pos'], 2.0, 4.0, 3.0,  # 3" thick for wall panels
+                    self.colors['absorption_panel'], e_wall_panel['name'],
+                    "E wall panel - NE corner coverage", 'vertical-long-wall'
+                )
+                panels_used += 1
+        
         # Priority 5: Grid Clouds (3") - Green in diagram  
         # Below lighting grid, above talent positions - positioned like CBC diagram
-        if panel_count > 20:
+        if panel_count > 22:
             # Calculate desk position (matches main method)
             desk_center_x = room_width_EW/2
             desk_center_y = (room_length_NS/2) - 5
