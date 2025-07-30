@@ -181,32 +181,9 @@ DASHBOARD_CSS = """
         background-color: #1a1f2e !important; /* Dark grey-navy mix */
     }
     
-    /* Fix sidebar collapse button for cloud deployment */
+    /* Hide sidebar collapse button - keep sidebar always visible */
     [data-testid="collapsedControl"] {
-        font-family: 'Segoe UI', 'Arial Unicode MS', Arial, sans-serif !important;
-        text-indent: -9999px !important;
-        position: relative !important;
-    }
-    
-    [data-testid="collapsedControl"]::before {
-        content: "‹‹" !important;
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        text-indent: 0 !important;
-        font-size: 16px !important;
-        font-weight: bold !important;
-        color: #666 !important;
-    }
-    
-    [data-testid="collapsedControl"][aria-expanded="false"]::before {
-        content: "››" !important;
-    }
-    
-    /* Dark mode button */
-    [data-theme="dark"] [data-testid="collapsedControl"]::before {
-        color: #f7f9fb !important;
+        display: none !important;
     }
 </style>
 """
