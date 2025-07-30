@@ -1,0 +1,172 @@
+/* 
+ * CBC Interactive Dashboard - SIMPLIFIED Stylesheet
+ * Simple rule: Dark text on light backgrounds, light text on dark backgrounds
+ */
+
+/* ==========================================================================
+   BASIC FONTS AND SETUP
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* ==========================================================================
+   SIMPLE TEXT COLOR RULES
+   ========================================================================== */
+
+/* DEFAULT: Dark text for light mode */
+* {
+  color: #212529 !important;
+  opacity: 1 !important;
+}
+
+/* DARK MODE: Light text when background is dark */
+/* Try all possible ways Streamlit might indicate dark mode */
+
+/* System preference */
+@media (prefers-color-scheme: dark) {
+  * { 
+    color: #f7f9fb !important; 
+    opacity: 1 !important;
+  }
+}
+
+/* Streamlit theme classes */
+[data-theme="dark"] *,
+.stApp[data-theme="dark"] *,
+html[data-theme="dark"] *,
+body[data-theme="dark"] *,
+html.streamlit-dark *,
+.dark *,
+.dark-theme *,
+html.dark *,
+body.dark * {
+  color: #f7f9fb !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   COMPONENT STYLES
+   ========================================================================== */
+
+/* Header gradient - always white text */
+.main-header,
+.main-header * {
+  background: linear-gradient(90deg, #e74c3c, #ffffff, #e74c3c);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Status colors */
+.critical-metric { color: #e74c3c !important; font-weight: bold; }
+.good-metric { color: #27ae60 !important; font-weight: bold; }
+.warning-metric { color: #f39c12 !important; font-weight: bold; }
+
+/* Highlight boxes */
+.problem-highlight {
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(243, 156, 18, 0.08));
+  border: 2px solid #f39c12;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+}
+
+.solution-highlight {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.08));
+  border: 2px solid #3498db;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+}
+
+/* Force text visibility in highlight boxes */
+.problem-highlight *,
+.solution-highlight * {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   SIDEBAR 
+   ========================================================================== */
+
+/* Light mode sidebar */
+.css-1d391kg, 
+section[data-testid="stSidebar"] {
+  background-color: #d6dce5 !important;
+}
+
+/* Dark mode sidebar */
+@media (prefers-color-scheme: dark) {
+  .css-1d391kg, 
+  section[data-testid="stSidebar"] {
+    background-color: #1a1f2e !important;
+  }
+}
+
+html.streamlit-dark .css-1d391kg, 
+html.streamlit-dark section[data-testid="stSidebar"],
+[data-theme="dark"] .css-1d391kg,
+[data-theme="dark"] section[data-testid="stSidebar"] {
+  background-color: #1a1f2e !important;
+}
+
+/* ==========================================================================
+   SIDEBAR COLLAPSE BUTTON FIX
+   ========================================================================== */
+
+/* Fix sidebar collapse button for cloud deployment */
+[data-testid="collapsedControl"] {
+  font-family: 'Segoe UI', 'Arial Unicode MS', Arial, sans-serif !important;
+  text-indent: -9999px !important;
+  position: relative !important;
+}
+
+[data-testid="collapsedControl"]::before {
+  content: "‹‹" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  text-indent: 0 !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  color: #666 !important;
+}
+
+[data-testid="collapsedControl"][aria-expanded="false"]::before {
+  content: "››" !important;
+}
+
+/* Dark mode button */
+@media (prefers-color-scheme: dark) {
+  [data-testid="collapsedControl"]::before {
+    color: #f7f9fb !important;
+  }
+}
+
+html.streamlit-dark [data-testid="collapsedControl"]::before,
+[data-theme="dark"] [data-testid="collapsedControl"]::before {
+  color: #f7f9fb !important;
+}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+.mt-1 { margin-top: 0.5rem !important; }
+.mt-2 { margin-top: 1rem !important; }
+.mt-3 { margin-top: 1.5rem !important; }
+.mb-1 { margin-bottom: 0.5rem !important; }
+.mb-2 { margin-bottom: 1rem !important; }
+.mb-3 { margin-bottom: 1.5rem !important; }
+.mb-4 { margin-bottom: 2rem !important; }
+.p-1 { padding: 0.5rem !important; }
+.p-2 { padding: 1rem !important; }
+.p-3 { padding: 1.5rem !important; }

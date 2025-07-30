@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fixed Interactive Web Dashboard for CBC Studio 8 & Hub Acoustic Analysis
-Removed problematic CSS transitions that may cause scroll crashes
+CSS-free version - all styling moved to external stylesheet
 """
 
 import streamlit as st
@@ -27,189 +27,6 @@ try:
 except ImportError as e:
     COMPONENTS_LOADED = False
     COMPONENT_ERROR = f"⚠️ Component import error: {e}"
-
-# Simplified CSS without problematic transitions and transforms
-DASHBOARD_CSS = """
-<style>
-    /* Import Inter font from Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* Global font family override */
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-    }
-    
-    /* Simplified styling without animations */
-    :root {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8f9fa;
-        --text-primary: #333333;
-        --text-secondary: #666666;
-        --border-color: #dee2e6;
-        --accent-blue: #007bff;
-        --accent-red: #e74c3c;
-        --accent-green: #27ae60;
-        --accent-orange: #f39c12;
-    }
-    
-    /* Override dark theme to force light mode */
-    [data-theme="dark"] {
-        --bg-primary: #ffffff !important;
-        --bg-secondary: #f8f9fa !important;
-        --text-primary: #333333 !important;
-        --text-secondary: #666666 !important;
-        --border-color: #dee2e6 !important;
-        --accent-blue: #007bff !important;
-        --accent-red: #e74c3c !important;
-        --accent-green: #27ae60 !important;
-        --accent-orange: #f39c12 !important;
-        background-color: #ffffff !important;
-        color: #333333 !important;
-    }
-    
-    .main-header {
-        background: linear-gradient(90deg, #e74c3c, #ffffff, #e74c3c);
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        text-align: center;
-        color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    
-    .metric-card {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        padding: 1.5rem;
-        border-radius: 12px;
-        border-left: 4px solid var(--accent-blue);
-        margin: 1rem 0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        /* REMOVED: transition and transform that could cause scroll issues */
-    }
-    
-    .problem-highlight {
-        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.08));
-        border: 2px solid var(--accent-orange);
-        color: var(--text-primary);
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1.5rem 0;
-        box-shadow: 0 2px 10px rgba(255, 193, 7, 0.1);
-    }
-    
-    .solution-highlight {
-        background: linear-gradient(135deg, rgba(74, 185, 255, 0.15), rgba(74, 185, 255, 0.08));
-        border: 2px solid var(--accent-blue);
-        color: var(--text-primary);
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1.5rem 0;
-        box-shadow: 0 2px 10px rgba(74, 185, 255, 0.1);
-    }
-    
-    .critical-metric {
-        color: var(--accent-red);
-        font-weight: bold;
-    }
-    
-    .good-metric {
-        color: var(--accent-green);
-        font-weight: bold;
-    }
-    
-    .warning-metric {
-        color: var(--accent-orange);
-        font-weight: bold;
-    }
-    
-    /* Enhanced text readability */
-    h1, h2, h3, h4, h5, h6 {
-        color: var(--text-primary);
-        opacity: 1;
-    }
-    
-    p, li, span, div, strong, em {
-        color: var(--text-primary);
-        opacity: 1;
-    }
-    
-    /* Professional metric styling */
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .metric-label {
-        font-size: 1rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        opacity: 0.8;
-    }
-    
-    .metric-subtitle {
-        font-size: 0.9rem;
-        opacity: 0.7;
-        margin-top: 0.5rem;
-    }
-    
-    /* Sidebar styling with navy blue tint - comprehensive targeting */
-    .css-1d391kg, .css-1d391kg .css-1aumxhk, section[data-testid="stSidebar"] {
-        background-color: #d6dce5 !important; /* Light grey-navy mix */
-    }
-    
-    .css-1d391kg .stMarkdown, .css-1d391kg .stSelectbox, .css-1d391kg .stHeader {
-        background-color: transparent !important;
-    }
-    
-    /* Force sidebar background with higher specificity */
-    .stApp > .main .css-1d391kg {
-        background-color: #d6dce5 !important; /* Light grey-navy mix */
-    }
-    
-    /* Alternative targeting for different Streamlit versions */
-    section[data-testid="stSidebar"] > div:first-child {
-        background-color: #d6dce5 !important;
-    }
-    
-    /* Dark mode */
-    [data-theme="dark"] .css-1d391kg, 
-    [data-theme="dark"] section[data-testid="stSidebar"] {
-        background-color: #1a1f2e !important; /* Dark grey-navy mix */
-    }
-    
-    /* Fix sidebar collapse button for cloud deployment */
-    [data-testid="collapsedControl"] {
-        font-family: 'Segoe UI', 'Arial Unicode MS', Arial, sans-serif !important;
-        text-indent: -9999px !important;
-        position: relative !important;
-    }
-    
-    [data-testid="collapsedControl"]::before {
-        content: "‹‹" !important;
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        text-indent: 0 !important;
-        font-size: 16px !important;
-        font-weight: bold !important;
-        color: #666 !important;
-    }
-    
-    [data-testid="collapsedControl"][aria-expanded="false"]::before {
-        content: "››" !important;
-    }
-    
-    /* Dark mode button */
-    [data-theme="dark"] [data-testid="collapsedControl"]::before {
-        color: #f7f9fb !important;
-    }
-</style>
-"""
 
 class AcousticDashboard:
     def __init__(self):
@@ -407,104 +224,7 @@ class AcousticDashboard:
             avg_sti_degradation = None
             worst_position = None
         
-        # Hidden - Critical metrics row (metric cards hidden per user request)
-        # col1, col2, col3, col4 = st.columns(4)
-        # 
-        # # Dynamic metrics based on actual data
-        # with col1:
-        #     if space == "Studio 8" and avg_sti_degradation is not None:
-        #         sti_status = "critical-metric" if avg_sti_degradation > 20 else "warning-metric" if avg_sti_degradation > 10 else "good-metric"
-        #         sti_icon = "🔴" if avg_sti_degradation > 20 else "⚠️" if avg_sti_degradation > 10 else "✅"
-        #         st.markdown(f"""
-        #         <div class="metric-card">
-        #             <div class="metric-label">{sti_icon} STI DEGRADATION</div>
-        #             <div class="metric-value {sti_status}">{avg_sti_degradation:.1f}%</div>
-        #             <p>Average across positions</p>
-        #             <div class="metric-subtitle">Target: &lt;15%</div>
-        #         </div>
-        #         """, unsafe_allow_html=True)
-        #     else:
-        #         # The Hub - no STI data
-        #         st.markdown(f"""
-        #         <div class="metric-card">
-        #             <div class="metric-label">📊 STI DATA</div>
-        #             <div class="metric-value warning-metric">No Data</div>
-        #             <p>STI not recorded for The Hub</p>
-        #             <div class="metric-subtitle">RT60 analysis available</div>
-        #         </div>
-        #         """, unsafe_allow_html=True)
-        # 
-        # with col2:
-        #     if space == "Studio 8" and worst_position is not None:
-        #         worst_pos_name = worst_position['position']
-        #         worst_degradation = worst_position['sti_degradation_percent']
-        #         worst_status = "critical-metric" if worst_degradation > 25 else "warning-metric"
-        #         st.markdown(f"""
-        #         <div class="metric-card">
-        #             <div class="metric-label">📍 WORST POSITION</div>
-        #             <div class="metric-value {worst_status}">{worst_pos_name}</div>
-        #             <p>{worst_degradation:.1f}% STI degradation</p>
-        #             <div class="metric-subtitle">Needs priority treatment</div>
-        #         </div>
-        #         """, unsafe_allow_html=True)
-        #     else:
-        #         # The Hub - show RT60 based worst position instead
-        #         worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
-        #         worst_rt60_name = worst_rt60_pos['position']
-        #         worst_rt60_increase = worst_rt60_pos['RT60_500Hz_increase_percent']
-        #         rt60_status = "critical-metric" if worst_rt60_increase > 50 else "warning-metric"
-        #         st.markdown(f"""
-        #         <div class="metric-card">
-        #             <div class="metric-label">📍 WORST POSITION</div>
-        #             <div class="metric-value {rt60_status}">{worst_rt60_name}</div>
-        #             <p>{worst_rt60_increase:.1f}% RT60 increase</p>
-        #             <div class="metric-subtitle">Needs priority treatment</div>
-        #         </div>
-        #         """, unsafe_allow_html=True)
-        # 
-        # with col3:
-        #     cost_status = "good-metric" if estimated_cost <= 1200 else "warning-metric"
-        #     st.markdown(f"""
-        #     <div class="metric-card">
-        #         <div class="metric-label">💰 SOLUTION COST</div>
-        #         <div class="metric-value {cost_status}">${estimated_cost}</div>
-        #         <p>{total_panels} panels recommended</p>
-        #         <div class="metric-subtitle">Budget: $1,200</div>
-        #     </div>
-        #     """, unsafe_allow_html=True)
-        # 
-        # with col4:
-        #     # Count positions needing urgent treatment
-        #     urgent_positions = len(treatment_data[treatment_data['treatment_urgency'] == 'critical'])
-        #     urgent_status = "critical-metric" if urgent_positions > 2 else "warning-metric" if urgent_positions > 0 else "good-metric"
-        #     st.markdown(f"""
-        #     <div class="metric-card">
-        #         <div class="metric-label">🚨 URGENT TREATMENT</div>
-        #         <div class="metric-value {urgent_status}">{urgent_positions}</div>
-        #         <p>Positions need immediate work</p>
-        #         <div class="metric-subtitle">Critical priority</div>
-        #     </div>
-        #     """, unsafe_allow_html=True)
-        
-        # Hide STI chart for both spaces (STI data quality issues)
         # Position comparison chart
-        # st.subheader("STI Degradation by Position")
-        # 
-        # # Create position comparison chart
-        # fig = px.bar(
-        #     evidence_data, 
-        #     x='position', 
-        #     y='sti_degradation_percent',
-        #     color='treatment_urgency',
-        #     color_discrete_map={'critical': '#e74c3c', 'high': '#f39c12', 'medium': '#27ae60'},
-        #     title=f"Speech Transmission Index Degradation - {space}",
-        #     labels={'sti_degradation_percent': 'STI Degradation (%)', 'position': 'Measurement Position'}
-        # )
-        # fig.add_hline(y=15, line_dash="dash", line_color="red", 
-        #              annotation_text="Target Threshold (15%)", annotation_position="right")
-        # fig.update_layout(height=400, showlegend=True)
-        # st.plotly_chart(fig, use_container_width=True)
-        
         # Executive summary sections
         col_left, col_right = st.columns([1, 1])
         
@@ -697,9 +417,9 @@ class AcousticDashboard:
         
         # Use Streamlit native components instead of complex HTML
         # Status header
-        st.markdown(f"""<div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 250, 0.95)); border: 2px solid {status_color}; border-radius: 12px; margin: 1rem 0;">
-        <h4 style="color: {status_color}; margin: 0;">{status}</h4>
-        <p style="margin: 0.25rem 0 0 0; color: #666;">{recommendation}</p>
+        st.markdown(f"""<div class="metric-card text-center">
+        <h4 class="text-{status_color}">{status}</h4>
+        <p class="text-muted">{recommendation}</p>
         </div>""", unsafe_allow_html=True)
         
         # Create metrics using columns for better compatibility
@@ -962,8 +682,17 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # Apply simplified CSS styling
-    st.markdown(DASHBOARD_CSS, unsafe_allow_html=True)
+    # Load external CSS stylesheet
+    try:
+        css_path = Path('assets/unified_dashboard_styles.css')
+        if css_path.exists():
+            with open(css_path, 'r') as f:
+                css_content = f.read()
+                st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
+        else:
+            st.warning("CSS file not found. Dashboard may not display correctly.")
+    except Exception as e:
+        st.error(f"Error loading CSS: {e}")
     
     # Show component error if any
     if COMPONENT_ERROR:
