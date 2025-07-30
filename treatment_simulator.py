@@ -910,35 +910,38 @@ class TreatmentSimulator:
                 st.write(f"- Total coverage: {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
             
             with detail_col2:
-                st.subheader("Panel Costs")
+                # TODO: Panel Costs section temporarily hidden - needs accurate pricing
+                # st.subheader("Panel Costs")
+                # 
+                # # Panel costs breakdown (no subheading)
+                # if panel_5_5_count > 0:
+                #     st.write(f"• {panel_5_5_count}x 5.5\" @ $30 ea: **${cost_5_5_inch}**")
+                # if panel_3_count > 0:
+                #     st.write(f"• {panel_3_count}x 3\" @ $25 ea: **${cost_3_inch}**")
+                # if panel_2_count > 0:
+                #     st.write(f"• {panel_2_count}x 2\" @ $20 ea: **${cost_2_inch}**")
+                # 
+                # st.markdown("---")
+                # st.markdown(f"**Subtotal: ${total_cost}**")
+                # 
+                # # Additional costs
+                # st.markdown("**Additional Costs:**")
+                # labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
+                # hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
+                # fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
+                # 
+                # st.write(f"• Installation labor: **${labor_cost}**")
+                # st.write(f"• Mounting hardware: **${hardware_cost}**")
+                # st.write(f"• Acoustic fabric: **${fabric_cost}**")
+                # 
+                # # Tax note
+                # st.markdown("---")
+                # st.caption("*All prices in CAD before HST (13%)")
+                # hst_amount = (total_cost + labor_cost + hardware_cost + fabric_cost) * 0.13
+                # total_with_tax = (total_cost + labor_cost + hardware_cost + fabric_cost) + hst_amount
+                # st.caption(f"Total with HST: ${total_with_tax:.0f}")
                 
-                # Panel costs breakdown (no subheading)
-                if panel_5_5_count > 0:
-                    st.write(f"• {panel_5_5_count}x 5.5\" @ $30 ea: **${cost_5_5_inch}**")
-                if panel_3_count > 0:
-                    st.write(f"• {panel_3_count}x 3\" @ $25 ea: **${cost_3_inch}**")
-                if panel_2_count > 0:
-                    st.write(f"• {panel_2_count}x 2\" @ $20 ea: **${cost_2_inch}**")
-                
-                st.markdown("---")
-                st.markdown(f"**Subtotal: ${total_cost}**")
-                
-                # Additional costs
-                st.markdown("**Additional Costs:**")
-                labor_cost = min(300, total_panels * 8)  # $8 per panel, max $300
-                hardware_cost = total_panels * 3  # $3 per panel for mounting hardware
-                fabric_cost = total_panels * 5  # $5 per panel for acoustic fabric
-                
-                st.write(f"• Installation labor: **${labor_cost}**")
-                st.write(f"• Mounting hardware: **${hardware_cost}**")
-                st.write(f"• Acoustic fabric: **${fabric_cost}**")
-                
-                # Tax note
-                st.markdown("---")
-                st.caption("*All prices in CAD before HST (13%)")
-                hst_amount = (total_cost + labor_cost + hardware_cost + fabric_cost) * 0.13
-                total_with_tax = (total_cost + labor_cost + hardware_cost + fabric_cost) + hst_amount
-                st.caption(f"Total with HST: ${total_with_tax:.0f}")
+                st.info("💰 **Cost Analysis Section**\n\nPanel pricing and cost breakdown temporarily hidden while pricing data is being updated for accuracy.")
 
 if __name__ == "__main__":
     simulator = TreatmentSimulator()
