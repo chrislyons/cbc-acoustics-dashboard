@@ -847,32 +847,26 @@ class AcousticDashboard:
         st.info(f"**Target:** 0.3-0.4s for broadcast quality | **Panel Count:** {panel_count} panels")
     
     def create_hub_theoretical_heatmap(self, panel_count=0):
-        """Create theoretical RT60 heatmap for The Hub based on panel count"""
+        """Create RT60 heatmap for The Hub using real measurement data"""
         import plotly.graph_objects as go
         import numpy as np
+        from pathlib import Path
         
-        # Hub measurement positions (theoretical grid)
-        hub_positions = {
-            "Center": {"coords": [7.9, 6.25, 5.5]},
-            "NE Glass": {"coords": [10, 8, 5.5]},
-            "SE Corner": {"coords": [12, 4, 5.5]},
-            "SW Corner": {"coords": [4, 4, 5.5]},
-            "NW Wall": {"coords": [4, 8, 5.5]}
-        }
+        # Real Hub measurement data from Smaart logs
+        hub_rt60_data = self.load_hub_rt60_data()
         
-        # Frequency bands
-        frequencies = ['125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz']
+        if not hub_rt60_data:
+            st.error("Unable to load Hub RT60 measurement data")
+            return None
         
-        # Base RT60 values for The Hub (shorter than Studio 8 due to smaller size)
-        base_rt60 = {
-            '125Hz': 0.85, '250Hz': 0.75, '500Hz': 0.65, '1kHz': 0.55, 
-            '2kHz': 0.50, '4kHz': 0.45, '8kHz': 0.40
-        }
-        
-        # Calculate panel effect (more effective in smaller space)
+        # Apply panel effect to real measurements
         panel_reduction_factor = min(0.6, panel_count * 0.04)  # 4% per panel, max 60%
         
-        # Create heatmap data
+        # Frequency bands (matching Studio 8)
+        frequencies = ['125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz']
+        positions = list(hub_rt60_data.keys())
+        
+        # Create heatmap data with panel adjustments
         z_values = []
         hover_text = []
         
@@ -880,41 +874,73 @@ class AcousticDashboard:
             row_values = []
             hover_row = []
             
-            for pos_name in hub_positions.keys():
-                # Apply panel reduction with position-specific variations
-                position_factor = 1.0
-                if pos_name == "NE Glass":
-                    position_factor = 1.2  # Glass wall reflection
-                elif "Corner" in pos_name:
-                    position_factor = 0.9  # Corner absorption
-                    
-                rt60_value = base_rt60[freq] * position_factor * (1 - panel_reduction_factor)
-                row_values.append(rt60_value)
-                hover_row.append(f"{pos_name}<br>{freq}: {rt60_value:.2f}s<br>Panels: {panel_count}")
+            for pos_name in positions:
+                if freq in hub_rt60_data[pos_name]:
+                    base_rt60 = hub_rt60_data[pos_name][freq]
+                    # Apply panel reduction
+                    adjusted_rt60 = base_rt60 * (1 - panel_reduction_factor)
+                    row_values.append(adjusted_rt60)
+                    hover_row.append(f"{pos_name}<br>{freq}: {adjusted_rt60:.2f}s<br>Panels: {panel_count}")
+                else:
+                    row_values.append(0.4)  # fallback
+                    hover_row.append(f"{pos_name}<br>{freq}: No data<br>Panels: {panel_count}")
             
             z_values.append(row_values)
             hover_text.append(hover_row)
         
-        # Create heatmap
+        # Create heatmap with Studio 8's exact colorscale
         fig = go.Figure(data=go.Heatmap(
             z=z_values,
-            x=list(hub_positions.keys()),
+            x=positions,
             y=frequencies,
             hovertemplate='%{hovertext}<extra></extra>',
             hovertext=hover_text,
-            colorscale='RdYlGn_r',
-            zmin=0.2,
-            zmax=1.0,
+            colorscale=[
+                [0.0, '#000080'],    # Dark blue for very low RT60 (0.15s)
+                [0.05, '#003399'],   # Deep blue
+                [0.07, '#0066CC'],   # Medium blue
+                [0.09, '#3399FF'],   # Lighter blue
+                [0.12, '#4DA6FF'],   # Blue continuing
+                [0.15, '#66B3FF'],   # Light blue
+                [0.18, '#80CCFF'],   # Very light blue
+                [0.2, '#99DDFF'],    # Blue-green transition
+                [0.22, '#B3EEFF'],   # Blue-green bridge
+                [0.25, '#40C040'],   # GREEN START - Hub ideal range begins
+                [0.27, '#50D050'],   # Green progression
+                [0.29, '#60E060'],   # Target green center
+                [0.32, '#70F070'],   # GREEN END - Hub ideal range (0.3s)
+                [0.35, '#80FF80'],   # Light green transition
+                [0.37, '#90FF90'],   # Lighter green
+                [0.39, '#A0FFA0'],   # Green-yellow bridge
+                [0.4, '#CCFF88'],    # Yellow-green
+                [0.45, '#EEFF77'],   # Soft yellow-green
+                [0.48, '#FFFF66'],   # Standard yellow
+                [0.52, '#FFEE55'],   # Gentle yellow
+                [0.55, '#FFD700'],   # Gold yellow
+                [0.58, '#FFCC33'],   # Gold transition
+                [0.62, '#FFA500'],   # Orange
+                [0.68, '#FF8C00'],   # Dark orange
+                [0.72, '#FF6347'],   # Tomato/red-orange
+                [0.8, '#FF4500'],    # Red-orange
+                [0.85, '#FF3300'],   # Bright red
+                [0.9, '#E60000'],    # Deep red
+                [1.0, '#CC0000']     # DEEPEST RED at 0.7s
+            ],
+            zmin=0.15,   # Minimum possible with maximum treatment
+            zmax=0.7,    # Maximum expected from measurements
             colorbar=dict(
                 title=dict(
                     text="RT60 (seconds)",
                     side="right"
-                )
+                ),
+                tickmode="linear",
+                tick0=0.2,
+                dtick=0.1
             )
         ))
         
         fig.update_layout(
-            title=f"The Hub RT60 Analysis - {panel_count} Panels",
+            title=f"The Hub RT60 Analysis - {panel_count} Panels (Real Data)",
             xaxis_title="Measurement Position",
             yaxis_title="Frequency",
             height=400,
@@ -923,6 +949,62 @@ class AcousticDashboard:
         
         return fig
     
+    def load_hub_rt60_data(self):
+        """Load actual RT60 measurements from Hub Smaart log files"""
+        from pathlib import Path
+        
+        # Path to Hub Smaart logs
+        hub_path = Path('data/raw/250715-smaartLogs/TheHub')
+        
+        # Mapping from file names to position names
+        file_to_position = {
+            'TheHub-Chair1-64k.txt': 'Chair1',
+            'TheHub-Chair2-64k.txt': 'Chair2',
+            'TheHub-MidRoom-64k.txt': 'MidRoom',
+            'TheHub-BackCorner-64k.txt': 'BackCorner',
+            'TheHub-CeilingCorner-64k.txt': 'CeilingCorner'
+        }
+        
+        hub_data = {}
+        
+        for filename, position in file_to_position.items():
+            file_path = hub_path / filename
+            if not file_path.exists():
+                continue
+                
+            try:
+                with open(file_path, 'r') as f:
+                    lines = f.readlines()
+                
+                # Parse RT60 values (same format as Studio 8)
+                position_data = {}
+                for line in lines:
+                    if line.startswith('Oct\t') and 'Hz' in line:
+                        parts = line.strip().split('\t')
+                        if len(parts) >= 3:
+                            freq_str = parts[1]
+                            rt60_str = parts[2]
+                            
+                            try:
+                                rt60_val = float(rt60_str)
+                                if rt60_val > 0:  # Valid measurement
+                                    # Map frequencies to match our labels
+                                    freq_map = {'125Hz': '125Hz', '250Hz': '250Hz', '500Hz': '500Hz', 
+                                              '1kHz': '1kHz', '2kHz': '2kHz', '4kHz': '4kHz', '8kHz': '8kHz'}
+                                    if freq_str in freq_map:
+                                        position_data[freq_map[freq_str]] = rt60_val
+                            except ValueError:
+                                continue
+                
+                if position_data:
+                    hub_data[position] = position_data
+                    
+            except Exception as e:
+                st.warning(f"Error loading Hub data from {filename}: {e}")
+                continue
+        
+        return hub_data
+    
     def render_hub_rt60_summary(self, panel_count):
         """Render RT60 analysis summary specific to The Hub"""
         # Calculate theoretical averages
@@ -930,19 +1012,19 @@ class AcousticDashboard:
         panel_reduction = min(0.6, panel_count * 0.04)  # 4% per panel
         current_avg = base_avg * (1 - panel_reduction)
         
-        # Determine status
-        if current_avg > 0.7:
+        # Determine status for Hub (0.2-0.3s target range)
+        if current_avg >= 0.5:
             status = "🔴 Needs Treatment"
             status_color = "#e74c3c"
             recommendation = "Add panels to problem areas shown in red"
-        elif current_avg < 0.4:
+        elif current_avg < 0.2:
             status = "🔵 Excellent Control"
             status_color = "#3498db"
             recommendation = "Optimal RT60 achieved for compact space"
-        elif current_avg < 0.55:
-            status = "🟢 Good Control"
+        elif current_avg <= 0.3:
+            status = "🟢 Target Range"
             status_color = "#27ae60"
-            recommendation = "Suitable for broadcast quality"
+            recommendation = "Ideal RT60 for compact broadcast space"
         else:
             status = "🟡 Moderate"
             status_color = "#f39c12"
@@ -974,15 +1056,15 @@ class AcousticDashboard:
             )
         
         with col3:
-            target_range = "0.4-0.55s"
-            in_target = "Yes" if 0.4 <= current_avg <= 0.55 else "No"
+            target_range = "0.2-0.3s"
+            in_target = "Yes" if 0.2 <= current_avg <= 0.3 else "No"
             st.metric(
                 label="Target Range",
                 value=in_target,
                 help=f"Hub target: {target_range} for compact space"
             )
         
-        st.info(f"**Hub Target:** 0.4-0.55s (compact space) | **Panel Count:** {panel_count} panels")
+        st.info(f"**Hub Target:** 0.2-0.3s (compact space) | **Panel Count:** {panel_count} panels")
     
     def render_frequency_analysis(self, space):
         """Render frequency analysis dashboard using specialized explorer"""
