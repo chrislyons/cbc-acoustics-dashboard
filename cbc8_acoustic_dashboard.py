@@ -899,13 +899,14 @@ class AcousticDashboard:
                 [0.0, '#000080'],    # Dark blue for very low RT60 (0.15s)
                 [0.05, '#003399'],   # Deep blue
                 [0.07, '#0066CC'],   # Medium blue
-                [0.09, '#3399FF'],   # Lighter blue
-                [0.15, '#4DA6FF'],   # Blue continuing
-                [0.18, '#5555AA'],   # Blue transitioning 
-                [0.22, '#4477BB'],   # Blue-green transition
-                [0.25, '#40C040'],   # GREEN START - Hub ideal range (0.2s)
-                [0.27, '#50D050'],   # Green progression
-                [0.29, '#60E060'],   # Target green center
+                [0.09, '#3399FF'],   # Lighter blue transitioning to green
+                [0.09, '#4DA6FF'],   # Blue-green transition
+                [0.12, '#40C040'],   # GREEN START - Hub ideal range (0.2s)
+                [0.15, '#48C848'],   # Early green
+                [0.18, '#50D050'],   # Green progression
+                [0.22, '#58D858'],   # Target green center (0.25s)
+                [0.27, '#60E060'],   # Center green
+                [0.29, '#68E868'],   # Late green
                 [0.32, '#70F070'],   # GREEN END - Hub ideal range (0.3s)
                 [0.35, '#80FF80'],   # Light green transition
                 [0.37, '#90FF90'],   # Lighter green
