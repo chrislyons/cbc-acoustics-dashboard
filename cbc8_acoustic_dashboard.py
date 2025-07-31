@@ -562,7 +562,7 @@ class AcousticDashboard:
         st.table(studio8_df.style.hide(axis='index'))
         
         st.write("**Studio 8 Total Estimate**")
-        st.write("- **24–30 batts** required @ ~$13/batt + ~$12/framing = ~$750 in materials")
+        st.write("- **24–30 batts** required @ ~ $13/batt + ~ $12/framing = ~ $750 in materials")
         st.write("- **Focus:** treating low and mid energy buildup in the ceiling area and corners of the studio to address modal buildup throughout the spectrum")
         st.write("- **Effectiveness:** Up to **20dB reduction** in modal hot zones")
         
@@ -585,7 +585,7 @@ class AcousticDashboard:
         st.table(hub_df.style.hide(axis='index'))
         
         st.write("**The Hub Total Estimate**")
-        st.write("- **10–12 batts** required @ ~$$13/batt + ~$$12/framing = ~$$300 in materials")
+        st.write("- **10–12 batts** required @ ~ $$13/batt + ~ $$12/framing = ~ $$300 in materials")
         st.write("- **Focus:** maximizing absorptive surface area coverage in off-camera areas to manage modal stacks in odd acoustic space")
         st.write("- **Effectiveness:** ~8–12dB smoothing in problem regions")
         
