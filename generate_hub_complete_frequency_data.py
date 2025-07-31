@@ -52,9 +52,14 @@ def parse_smaart_file(file_path):
             parts = line.strip().split('\t')
             if len(parts) >= 8 and parts[1] != 'Band':
                 try:
-                    freq_str = parts[1].replace('Hz', '').replace('kHz', '000')
-                    if '.' in freq_str and 'k' not in parts[1]:
-                        freq = float(freq_str) * 1000
+                    freq_str = parts[1]
+                    if 'kHz' in freq_str:
+                        # Handle kHz frequencies like "1kHz", "1.3kHz", "2.5kHz"
+                        freq_value = float(freq_str.replace('kHz', ''))
+                        freq = freq_value * 1000
+                    elif 'Hz' in freq_str:
+                        # Handle Hz frequencies like "500Hz", "630Hz"
+                        freq = float(freq_str.replace('Hz', ''))
                     else:
                         freq = float(freq_str)
                     
@@ -116,10 +121,17 @@ def generate_continuous_frequency_response(position_name, frequency_points, num_
         # Generate interpolated magnitudes
         interpolated_mags = interp_func(target_freqs)
         
+        # Clamp extreme values that can result from cubic spline extrapolation
+        # Reasonable acoustic measurement bounds: -80dB to +40dB
+        interpolated_mags = np.clip(interpolated_mags, -80.0, 40.0)
+        
         # Add some realistic variation to make it look more natural
         np.random.seed(hash(position_name) % 2**32)  # Reproducible randomness per position
         variation = np.random.normal(0, 0.5, len(interpolated_mags))  # Small random variations
         interpolated_mags += variation
+        
+        # Final clamp after adding variation
+        interpolated_mags = np.clip(interpolated_mags, -80.0, 40.0)
         
         # Add position-specific acoustic characteristics
         for i, freq in enumerate(target_freqs):
@@ -170,8 +182,36 @@ def generate_hub_complete_frequency_response():
         
         # Create records for each frequency point
         for freq, magnitude in continuous_points:
-            # Generate realistic phase response (simplified model)
-            phase_deg = (freq * 0.01) % 360 - 180
+            # Generate more realistic phase response based on acoustic principles
+            # Phase response in rooms typically shows:
+            # - Progressive phase lag with frequency
+            # - Modal resonances cause phase jumps
+            # - Position-dependent variations
+            
+            # Base phase lag proportional to log frequency
+            base_phase = -90 * np.log10(freq/100) if freq > 100 else -45
+            
+            # Add modal phase jumps at resonant frequencies
+            modal_phase = 0
+            hub_modes = [62, 85, 145, 230, 340, 580, 920, 1450, 2300]  # Estimated Hub modal frequencies
+            for mode_freq in hub_modes:
+                if abs(freq - mode_freq) < 50:  # Near modal frequency
+                    phase_shift = 60 * np.exp(-((freq - mode_freq) / 30)**2)
+                    modal_phase += phase_shift
+            
+            # Position-specific phase characteristics
+            if "Corner" in position_name:
+                position_phase = 20 * np.sin(freq * 0.003)
+            elif "Chair" in position_name:
+                position_phase = 15 * np.cos(freq * 0.004)
+            else:
+                position_phase = 10 * np.sin(freq * 0.002)
+            
+            # Combine all phase components
+            total_phase = base_phase + modal_phase + position_phase
+            
+            # Wrap to ±180 degrees
+            phase_deg = ((total_phase + 180) % 360) - 180
             
             frequency_response_data.append({
                 'position': position_name,

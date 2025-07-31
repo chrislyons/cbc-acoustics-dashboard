@@ -506,45 +506,57 @@ class DataExplorer:
             st.info("**📊 Select datasets to view:**")
         
         with header_col2:
-            # Download CSV button (replacing panel count controls)
-            
-            # Get all CSV files in the data directory
-            data_path = Path('data/generated')
-            csv_files = list(data_path.glob('*.csv'))
-            
-            if csv_files:
-                # Create a combined CSV for download
-                combined_data = {}
-                for csv_file in csv_files:
-                    try:
-                        df = pd.read_csv(csv_file)
-                        sheet_name = csv_file.stem.replace('250728-', '').replace('-', '_')
-                        combined_data[sheet_name] = df
-                    except Exception as e:
-                        st.error(f"Error reading {csv_file.name}: {e}")
+            # Download CSV button with vertical alignment matching the info box
+            # Add container with matching height to align with info box
+            with st.container():
+                # Get all CSV files in the data directory
+                data_path = Path('data/generated')
+                csv_files = list(data_path.glob('*.csv'))
                 
-                if combined_data:
-                    # Create download button for combined CSV
-                    from io import StringIO
-                    combined_csv = StringIO()
-                    first_sheet = True
-                    for sheet_name, df in combined_data.items():
-                        if not first_sheet:
-                            combined_csv.write('\n\n')
-                        combined_csv.write(f"=== {sheet_name} ===\n")
-                        df.to_csv(combined_csv, index=False)
-                        first_sheet = False
+                if csv_files:
+                    # Create a combined CSV for download
+                    combined_data = {}
+                    for csv_file in csv_files:
+                        try:
+                            df = pd.read_csv(csv_file)
+                            sheet_name = csv_file.stem.replace('250728-', '').replace('-', '_')
+                            combined_data[sheet_name] = df
+                        except Exception as e:
+                            st.error(f"Error reading {csv_file.name}: {e}")
                     
-                    st.download_button(
-                        label="Download filtered data as CSV",
-                        data=combined_csv.getvalue(),
-                        file_name=f"cbc_acoustic_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-                        mime="text/csv",
-                        help="Download all analysis data as a single CSV file",
-                        use_container_width=True
-                    )
-            else:
-                st.warning("No CSV files found in data/generated directory")
+                    if combined_data:
+                        # Create download button for combined CSV with matching height
+                        from io import StringIO
+                        combined_csv = StringIO()
+                        first_sheet = True
+                        for sheet_name, df in combined_data.items():
+                            if not first_sheet:
+                                combined_csv.write('\n\n')
+                            combined_csv.write(f"=== {sheet_name} ===\n")
+                            df.to_csv(combined_csv, index=False)
+                            first_sheet = False
+                        
+                        # Use custom CSS to make button height match info box
+                        st.markdown("""
+                        <style>
+                        div[data-testid="stDownloadButton"] > button {
+                            height: 52px !important;
+                            padding: 12px 16px !important;
+                            font-weight: 600 !important;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
+                        
+                        st.download_button(
+                            label="Download filtered data as CSV",
+                            data=combined_csv.getvalue(),
+                            file_name=f"cbc_acoustic_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                            mime="text/csv",
+                            help="Download analysis data as CSV file",
+                            use_container_width=True
+                        )
+                else:
+                    st.warning("No CSV files found in data/generated directory")
         
         # Removed horizontal divider for cleaner layout
         

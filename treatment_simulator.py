@@ -39,6 +39,12 @@ class TreatmentSimulator:
                 "nrc": 1.15,
                 "cost": 30,
                 "absorption_curve": self._get_absorption_curve("5_5_inch")
+            },
+            "11_inch": {
+                "size": 8,  # square feet (2'x4')
+                "nrc": 1.35,
+                "cost": 45,
+                "absorption_curve": self._get_absorption_curve("11_inch")
             }
         }
         
@@ -176,9 +182,13 @@ class TreatmentSimulator:
             return {
                 125: 0.25, 250: 0.60, 500: 0.90, 1000: 0.95, 2000: 0.98, 4000: 0.98
             }
-        else:  # 5.5_inch
+        elif thickness == "5_5_inch":
             return {
                 125: 0.45, 250: 0.80, 500: 1.05, 1000: 1.15, 2000: 1.18, 4000: 1.15
+            }
+        else:  # 11_inch
+            return {
+                125: 0.75, 250: 1.10, 500: 1.25, 1000: 1.35, 2000: 1.30, 4000: 1.20
             }
     
     def calculate_rt60_with_panels(self, panel_counts, drape_removal=True):
@@ -471,32 +481,39 @@ class TreatmentSimulator:
         costs_2in = []
         costs_3in = []
         costs_5in = []
+        costs_11in = []
         benefits_2in = []
         benefits_3in = []
         benefits_5in = []
+        benefits_11in = []
         
         for count in panel_counts:
             # Costs
             cost_2 = count * self.panel_specs["2_inch"]["cost"]
             cost_3 = count * self.panel_specs["3_inch"]["cost"]
             cost_5 = count * self.panel_specs["5_5_inch"]["cost"]
+            cost_11 = count * self.panel_specs["11_inch"]["cost"]
             costs_2in.append(cost_2)
             costs_3in.append(cost_3)
             costs_5in.append(cost_5)
+            costs_11in.append(cost_11)
             
             # Benefits (average RT60 improvement)
-            rt60_2 = self.calculate_rt60_with_panels({"2_inch": count, "3_inch": 0, "5_5_inch": 0}, True)
-            rt60_3 = self.calculate_rt60_with_panels({"2_inch": 0, "3_inch": count, "5_5_inch": 0}, True)
-            rt60_5 = self.calculate_rt60_with_panels({"2_inch": 0, "3_inch": 0, "5_5_inch": count}, True)
+            rt60_2 = self.calculate_rt60_with_panels({"2_inch": count, "3_inch": 0, "5_5_inch": 0, "11_inch": 0}, True)
+            rt60_3 = self.calculate_rt60_with_panels({"2_inch": 0, "3_inch": count, "5_5_inch": 0, "11_inch": 0}, True)
+            rt60_5 = self.calculate_rt60_with_panels({"2_inch": 0, "3_inch": 0, "5_5_inch": count, "11_inch": 0}, True)
+            rt60_11 = self.calculate_rt60_with_panels({"2_inch": 0, "3_inch": 0, "5_5_inch": 0, "11_inch": count}, True)
             
             current_avg = np.mean(list(self.current_conditions["rt60_by_freq"].values()))
             benefit_2 = ((current_avg - np.mean(list(rt60_2.values()))) / current_avg) * 100
             benefit_3 = ((current_avg - np.mean(list(rt60_3.values()))) / current_avg) * 100
             benefit_5 = ((current_avg - np.mean(list(rt60_5.values()))) / current_avg) * 100
+            benefit_11 = ((current_avg - np.mean(list(rt60_11.values()))) / current_avg) * 100
             
             benefits_2in.append(max(0, benefit_2))
             benefits_3in.append(max(0, benefit_3))
             benefits_5in.append(max(0, benefit_5))
+            benefits_11in.append(max(0, benefit_11))
         
         fig = make_subplots(
             rows=1, cols=2,
@@ -517,6 +534,10 @@ class TreatmentSimulator:
             go.Scatter(x=list(panel_counts), y=costs_5in, name='5.5" Panels', line=dict(color='red')),
             row=1, col=1
         )
+        fig.add_trace(
+            go.Scatter(x=list(panel_counts), y=costs_11in, name='11" Corner Bass Traps', line=dict(color='purple')),
+            row=1, col=1
+        )
         
         # Budget line
         fig.add_hline(y=1200, line_dash="dash", line_color="gray", annotation_text="Budget ($1,200)", row=1, col=1)
@@ -532,6 +553,10 @@ class TreatmentSimulator:
         )
         fig.add_trace(
             go.Scatter(x=costs_5in, y=benefits_5in, name='5.5" Efficiency', mode='markers+lines', marker=dict(color='red')),
+            row=1, col=2
+        )
+        fig.add_trace(
+            go.Scatter(x=costs_11in, y=benefits_11in, name='11" Bass Trap Efficiency', mode='markers+lines', marker=dict(color='purple')),
             row=1, col=2
         )
         
@@ -629,7 +654,7 @@ class TreatmentSimulator:
         self.drape_data = self._load_drape_data(space)
         
         # Control panel
-        col1, col2 = st.columns([1, 2])
+        col1, col2 = st.columns([1, 1])
         
         with col1:
             st.subheader("Panel Planning")
@@ -656,80 +681,145 @@ class TreatmentSimulator:
                 # For The Hub, no drape to remove
                 drape_removal = False
             
-            # Initialize session state for panel counts - space-specific defaults
+            # Initialize session state for panel counts - space-specific defaults aligned with cannon
             if space == "Studio 8":
-                # Studio 8 defaults: 25 total panels (4 + 8 + 13 = 25)
+                # Studio 8 cannon defaults: 24 total panels (3 + 5 + 12 + 4 = 24)
+                # Priority: 4x11" corner bass traps, 12x5.5" ceiling clouds, 3x2" desk clouds, 5x3" north wall
                 if 'panel_2_inch' not in st.session_state:
-                    st.session_state.panel_2_inch = 4
+                    st.session_state.panel_2_inch = 3  # Desk clouds
                 if 'panel_3_inch' not in st.session_state:
-                    st.session_state.panel_3_inch = 8
+                    st.session_state.panel_3_inch = 5  # North wall panels
                 if 'panel_5_5_inch' not in st.session_state:
-                    st.session_state.panel_5_5_inch = 13
+                    st.session_state.panel_5_5_inch = 12  # Ceiling clouds
+                if 'panel_11_inch' not in st.session_state:
+                    st.session_state.panel_11_inch = 4  # Corner bass traps
             else:
-                # The Hub defaults: 10 total panels (2 + 3 + 5 = 10)
+                # The Hub cannon defaults: 16 total panels (4 + 8 + 4 + 0 = 16)
+                # Priority: 2x3" ceiling clouds, 2x5.5" east wall, 2x3" NE wall, 4x3" NW wall, 4x2" LED panels, 2x5.5" north wall
                 if 'panel_2_inch' not in st.session_state:
-                    st.session_state.panel_2_inch = 2
+                    st.session_state.panel_2_inch = 4  # LED panel locations
                 if 'panel_3_inch' not in st.session_state:
-                    st.session_state.panel_3_inch = 3
+                    st.session_state.panel_3_inch = 8  # Ceiling clouds + NE wall + NW wall (2+2+4)
                 if 'panel_5_5_inch' not in st.session_state:
-                    st.session_state.panel_5_5_inch = 5
+                    st.session_state.panel_5_5_inch = 4  # East wall + North wall (2+2)
+                if 'panel_11_inch' not in st.session_state:
+                    st.session_state.panel_11_inch = 0  # No 11" panels for The Hub
             
-            # Shopping cart style selectors - horizontal layout
+            # Shopping cart style selectors - horizontal layout with 4 columns for Studio 8
             st.markdown("**Panels (Mineral Wool, Framing, Hardware, Fabric)**")
-            col_5, col_3, col_2 = st.columns(3)
-            
-            with col_5:
-                st.markdown("**5.5\" @ $30 ea.**")
-                panel_5_5_count = st.number_input(
-                    "Qty:",
-                    min_value=0,
-                    max_value=50,
-                    value=st.session_state.panel_5_5_inch,
-                    step=1,
-                    key="panel_5_5_input",
-                    help="Excellent broadband absorption, especially low frequencies (125Hz+)"
-                )
-                st.session_state.panel_5_5_inch = panel_5_5_count
-            
-            with col_3:
-                st.markdown("**3\" @ $25 ea.**")
-                panel_3_count = st.number_input(
-                    "Qty:",
-                    min_value=0,
-                    max_value=50,
-                    value=st.session_state.panel_3_inch,
-                    step=1,
-                    key="panel_3_input",
-                    help="Good for mid-to-high frequency absorption (500Hz+)"
-                )
-                st.session_state.panel_3_inch = panel_3_count
-            
-            with col_2:
-                st.markdown("**2\" @ $20 ea.**")
-                panel_2_count = st.number_input(
-                    "Qty:",
-                    min_value=0,
-                    max_value=50,
-                    value=st.session_state.panel_2_inch,
-                    step=1,
-                    key="panel_2_input",
-                    help="Budget option for high-frequency absorption (1kHz+)"
-                )
-                st.session_state.panel_2_inch = panel_2_count
+            if space == "Studio 8":
+                col_11, col_5, col_3, col_2 = st.columns(4)
+                
+                with col_11:
+                    st.markdown("**11\" @ $45 ea.**")
+                    panel_11_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=20,
+                        value=st.session_state.panel_11_inch,
+                        step=1,
+                        key="panel_11_input",
+                        help="Superior bass traps for corners - maximum low frequency absorption (63Hz+)"
+                    )
+                    st.session_state.panel_11_inch = panel_11_count
+                
+                with col_5:
+                    st.markdown("**5.5\" @ $30 ea.**")
+                    panel_5_5_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_5_5_inch,
+                        step=1,
+                        key="panel_5_5_input",
+                        help="Excellent broadband absorption, especially low frequencies (125Hz+)"
+                    )
+                    st.session_state.panel_5_5_inch = panel_5_5_count
+                
+                with col_3:
+                    st.markdown("**3\" @ $25 ea.**")
+                    panel_3_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_3_inch,
+                        step=1,
+                        key="panel_3_input",
+                        help="Good for mid-to-high frequency absorption (500Hz+)"
+                    )
+                    st.session_state.panel_3_inch = panel_3_count
+                
+                with col_2:
+                    st.markdown("**2\" @ $20 ea.**")
+                    panel_2_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_2_inch,
+                        step=1,
+                        key="panel_2_input",
+                        help="Budget option for high-frequency absorption (1kHz+)"
+                    )
+                    st.session_state.panel_2_inch = panel_2_count
+            else:
+                # The Hub - keep 3 columns, no 11" option available
+                col_5, col_3, col_2 = st.columns(3)
+                panel_11_count = 0  # No 11" panels for The Hub
+                
+                with col_5:
+                    st.markdown("**5.5\" @ $30 ea.**")
+                    panel_5_5_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_5_5_inch,
+                        step=1,
+                        key="panel_5_5_input",
+                        help="Excellent broadband absorption, especially low frequencies (125Hz+)"
+                    )
+                    st.session_state.panel_5_5_inch = panel_5_5_count
+                
+                with col_3:
+                    st.markdown("**3\" @ $25 ea.**")
+                    panel_3_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_3_inch,
+                        step=1,
+                        key="panel_3_input",
+                        help="Good for mid-to-high frequency absorption (500Hz+)"
+                    )
+                    st.session_state.panel_3_inch = panel_3_count
+                
+                with col_2:
+                    st.markdown("**2\" @ $20 ea.**")
+                    panel_2_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=50,
+                        value=st.session_state.panel_2_inch,
+                        step=1,
+                        key="panel_2_input",
+                        help="Budget option for high-frequency absorption (1kHz+)"
+                    )
+                    st.session_state.panel_2_inch = panel_2_count
             
             # Create panel counts dictionary
             panel_counts = {
                 "2_inch": panel_2_count,
                 "3_inch": panel_3_count,
-                "5_5_inch": panel_5_5_count
+                "5_5_inch": panel_5_5_count,
+                "11_inch": panel_11_count
             }
             
             # Calculate totals
-            total_panels = panel_2_count + panel_3_count + panel_5_5_count
+            total_panels = panel_2_count + panel_3_count + panel_5_5_count + panel_11_count
             cost_2_inch = panel_2_count * self.panel_specs["2_inch"]["cost"]
             cost_3_inch = panel_3_count * self.panel_specs["3_inch"]["cost"]
             cost_5_5_inch = panel_5_5_count * self.panel_specs["5_5_inch"]["cost"]
-            total_cost = cost_2_inch + cost_3_inch + cost_5_5_inch
+            cost_11_inch = panel_11_count * self.panel_specs["11_inch"]["cost"]
+            total_cost = cost_2_inch + cost_3_inch + cost_5_5_inch + cost_11_inch
             budget_remaining = 1200 - total_cost
             
         
@@ -765,12 +855,14 @@ class TreatmentSimulator:
             
             with col1:
                 breakdown_parts = []
-                if panel_2_count > 0:
-                    breakdown_parts.append(f"{panel_2_count}x 2\"")
-                if panel_3_count > 0:
-                    breakdown_parts.append(f"{panel_3_count}x 3\"")
+                if panel_11_count > 0:
+                    breakdown_parts.append(f"{panel_11_count}x 11\"")
                 if panel_5_5_count > 0:
                     breakdown_parts.append(f"{panel_5_5_count}x 5.5\"")
+                if panel_3_count > 0:
+                    breakdown_parts.append(f"{panel_3_count}x 3\"")
+                if panel_2_count > 0:
+                    breakdown_parts.append(f"{panel_2_count}x 2\"")
                 panel_breakdown = " + ".join(breakdown_parts) if breakdown_parts else "None"
                 st.metric("Panels", f"{total_panels}", panel_breakdown)
             
@@ -796,6 +888,8 @@ class TreatmentSimulator:
             
             with cart_col1:
                 # Left column - panel breakdown
+                if panel_11_count > 0:
+                    st.write(f"• {panel_11_count}x 11\" panels: ${cost_11_inch}")
                 if panel_5_5_count > 0:
                     st.write(f"• {panel_5_5_count}x 5.5\" panels: ${cost_5_5_inch}")
                 if panel_3_count > 0:
@@ -850,48 +944,93 @@ class TreatmentSimulator:
                                        np.mean(list(self.current_conditions["rt60_by_freq"].values()))) * 100
                 predicted_sti = self.calculate_sti_improvement(avg_rt60_improvement)
                 
-                st.write("**Optimal Panel Placement:**")
+                st.write("**Optimal Panel Placement (Based on CBC Studio Analysis):**")
                 
-                if total_panels <= 8:
-                    st.write("- **Phase 1 (Minimal Treatment):** Basic drape compensation")
-                    st.write("  • 4-6 panels: Ceiling-mounted above lighting grid (center area)")
-                    st.write("  • 2-4 panels: Corner ceiling positions for modal control")
-                    st.write("  • Focus: Compensate for drape removal impact")
-                elif total_panels <= 16:
-                    st.write("- **Phase 2 (Essential Treatment):** Foundation acoustics")
-                    st.write("  • 4 panels: Corner bass traps (straddle-mount, above grid)")
-                    st.write("  • 6-8 panels: Center ceiling treatment (primary reflection zone)")
-                    st.write("  • 4 panels: North/South/East/West midpoint ceiling positions")
-                    st.write("  • Focus: Modal control + primary reflection management")
-                elif total_panels <= 24:
-                    st.write("- **Phase 3 (Comprehensive Treatment):** Professional standard")
-                    st.write("  • 4 panels: Corner bass traps (5.5\" recommended)")
-                    st.write("  • 8 panels: Ceiling treatment grid (above lighting)")
-                    st.write("  • 6 panels: First reflection points (side walls, mid-height)")
-                    st.write("  • 4-6 panels: North wall (off-camera positions)")
-                    st.write("  • Focus: Broadcast-quality speech intelligibility")
-                elif total_panels <= 35:
-                    st.write("- **Phase 4 (Enhanced Treatment):** Premium acoustics")
-                    st.write("  • 6 panels: Enhanced corner bass traps (double thickness)")
-                    st.write("  • 10-12 panels: Complete ceiling grid coverage")
-                    st.write("  • 8 panels: Wall first reflection points")
-                    st.write("  • 6 panels: Secondary reflection control (rear wall)")
-                    st.write("  • 4 panels: Fine-tuning positions")
-                    st.write("  • Focus: Exceptional clarity across all positions")
+                if space == "Studio 8":
+                    # Studio 8 cannon treatment plan
+                    st.write("**Studio 8 Treatment Priority Sequence:**")
+                    st.write("- **Priority 1:** 4 panels - Ceiling Corner Bass Traps (11\" thickness)")
+                    st.write("  • Location: Four ceiling corners (NW, NE, SW, SE)")
+                    st.write("  • Purpose: Maximum low-frequency modal control (20-250 Hz)")
+                    st.write("  • Effect: Up to 20dB reduction in modal hot zones")
+                    
+                    st.write("- **Priority 2:** 12-14 panels - Ceiling Clouds (5.5\" thickness)")
+                    st.write("  • Location: Above lighting grid, center studio area")
+                    st.write("  • Purpose: Broadband absorption, vertical mode control")
+                    st.write("  • Effect: Primary RT60 reduction across all frequencies")
+                    
+                    st.write("- **Priority 3:** 3 panels - Desk Clouds (2\" thickness)")
+                    st.write("  • Location: Above news desk, below lighting grid")
+                    st.write("  • Purpose: Direct speech reflection control")
+                    st.write("  • Effect: Immediate speech clarity improvement")
+                    
+                    st.write("- **Priority 4:** 5 panels - North Wall (3\" thickness)")
+                    st.write("  • Location: North wall, off-camera positions")
+                    st.write("  • Purpose: Mid-frequency absorption, first reflection control")
+                    st.write("  • Effect: Balanced frequency response")
+                    
+                    # Current selection analysis
+                    if total_panels <= 10:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Partial Priority 1 & 2 implementation")
+                        st.write("• Recommended: Focus on ceiling corner bass traps + initial ceiling clouds")
+                    elif total_panels <= 18:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Priority 1 & 2 coverage")
+                        st.write("• Optimal range for comprehensive ceiling treatment")
+                    elif total_panels <= 25:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Full cannon treatment plan")
+                        st.write("• Excellent coverage matching CBC analysis recommendations")
+                    else:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Enhanced treatment")
+                        st.write("• Beyond standard plan - additional fine-tuning positions")
+                
                 else:
-                    st.write("- **Phase 5 (Maximum Treatment):** Studio reference standard")
-                    st.write("  • 8 panels: Triple corner bass trap system")
-                    st.write("  • 15+ panels: Complete lighting absorption field")
-                    st.write("  • 10+ panels: Comprehensive wall treatment")
-                    st.write("  • Remaining panels: Custom problem area targeting")
-                    st.write("  • Focus: Reference-grade acoustic environment")
+                    # The Hub cannon treatment plan
+                    st.write("**The Hub Treatment Priority Sequence:**")
+                    st.write("- **Priority 1:** 2 panels - Ceiling Clouds (3\" thickness)")
+                    st.write("  • Location: Center ceiling area")
+                    st.write("  • Purpose: Mid-range absorption for primary reflection control")
+                    
+                    st.write("- **Priority 2:** 2 panels - East Wall (5.5\" thickness)")
+                    st.write("  • Location: East wall, broadband absorbers")
+                    st.write("  • Purpose: Low-frequency control in compact space")
+                    
+                    st.write("- **Priority 3:** 2 panels - NE Wall (3\" thickness)")
+                    st.write("  • Location: Northeast wall junction")
+                    st.write("  • Purpose: Corner reflection management")
+                    
+                    st.write("- **Priority 4:** 4 panels - NW Wall (3\" thickness)")
+                    st.write("  • Location: Northwest wall positions")
+                    st.write("  • Purpose: Comprehensive wall treatment")
+                    
+                    st.write("- **Priority 5:** 4 panels - Behind LED Fixtures (2\" thickness)")
+                    st.write("  • Location: LED panel mounting positions")
+                    st.write("  • Purpose: Equipment-integrated treatment")
+                    
+                    st.write("- **Priority 6:** 2 panels - North Wall (5.5\" thickness)")
+                    st.write("  • Location: North wall broadband positions")
+                    st.write("  • Purpose: Final frequency balance")
+                    
+                    # Current selection analysis for The Hub
+                    if total_panels <= 6:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Priority 1-2 implementation")
+                        st.write("• Focus on ceiling and primary wall treatment")
+                    elif total_panels <= 12:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Comprehensive Hub treatment")
+                        st.write("• Excellent coverage for compact hexagonal space")
+                    else:
+                        st.write(f"\n**Current Selection ({total_panels} panels):** Enhanced Hub treatment")
+                        st.write("• Beyond standard plan - additional coverage positions")
                 
                 # Panel type recommendations
-                max_count = max(panel_2_count, panel_3_count, panel_5_5_count)
-                if panel_5_5_count == max_count and panel_5_5_count > 0:
+                max_count = max(panel_2_count, panel_3_count, panel_5_5_count, panel_11_count)
+                if panel_11_count > 0 and panel_11_count == max_count:
+                    st.write("\n**Panel Planning:** Outstanding choice with 11\" corner bass traps - maximum low-frequency control and modal damping.")
+                elif panel_11_count > 0:
+                    st.write(f"\n**Panel Planning:** Excellent bass trap strategy with {panel_11_count}x 11\" corner panels for superior low-frequency control.")
+                elif panel_5_5_count == max_count and panel_5_5_count > 0:
                     st.write("\n**Panel Planning:** Excellent choice prioritizing 5.5\" panels for broadband absorption.")
                 elif panel_3_count == max_count and panel_3_count > 0:
-                    st.write("\n**Panel Planning:** Good mid-high frequency focus with 3\" panels. Consider more 5.5\" for low-frequency control.")
+                    st.write("\n**Panel Planning:** Good mid-high frequency focus with 3\" panels. Consider more 5.5\" or 11\" for low-frequency control.")
                 elif panel_2_count == max_count and panel_2_count > 0:
                     st.write("\n**Panel Planning:** Budget-conscious approach with 2\" panels. Great for high frequencies, but consider thicker panels for bass control.")
                 else:
@@ -903,11 +1042,34 @@ class TreatmentSimulator:
                 else:
                     st.write("\n**Drape Retained:** Existing drape provides some mid-frequency absorption. Focus panels on corners and walls.")
                 
-                st.write(f"\n**Expected Results:**")
-                st.write(f"- RT60 reduction: {avg_rt60_improvement:.1f}% average")
-                st.write(f"- STI improvement: {((predicted_sti - 0.67) / 0.67 * 100):.1f}%")
-                st.write(f"- Speech clarity: {'Excellent' if predicted_sti > 0.75 else 'Good' if predicted_sti > 0.6 else 'Fair'}")
-                st.write(f"- Total coverage: {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
+                st.write(f"\n**Expected Results (Based on CBC Analysis):**")
+                
+                if space == "Studio 8":
+                    if total_panels >= 20:  # Full cannon treatment
+                        st.write("- **Modal Reduction:** Up to 20dB in bass frequency hot zones")
+                        st.write("- **STI Improvement:** From 'extremely poor' (25-34%) to broadcast standard")
+                        st.write("- **RT60 Target:** Approach 0.4s optimal for TV broadcast")
+                        st.write("- **Speech Intelligibility:** Excellent broadcast quality achieved")
+                    else:
+                        st.write(f"- **RT60 reduction:** {avg_rt60_improvement:.1f}% average across spectrum")
+                        st.write(f"- **STI improvement:** {((predicted_sti - 0.67) / 0.67 * 100):.1f}% toward broadcast standard")
+                        st.write("- **Modal Control:** Partial improvement in low-frequency buildup")
+                        st.write(f"- **Speech clarity:** {'Excellent' if predicted_sti > 0.75 else 'Good' if predicted_sti > 0.6 else 'Fair'}")
+                else:
+                    # The Hub results
+                    if total_panels >= 10:  # Comprehensive Hub treatment
+                        st.write("- **Frequency Smoothing:** 8-12dB reduction in problem regions")
+                        st.write("- **Glass Surface Mitigation:** Localized clarity issues addressed")
+                        st.write("- **Modal Management:** Strategic softening in compact space")
+                        st.write("- **Coverage Efficiency:** Maximum absorptive surface in off-camera areas")
+                    else:
+                        st.write(f"- **RT60 reduction:** {avg_rt60_improvement:.1f}% average")
+                        st.write(f"- **STI improvement:** {((predicted_sti - 0.67) / 0.67 * 100):.1f}%")
+                        st.write("- **Glass Reflection Control:** Partial mitigation of surface issues")
+                        st.write(f"- **Speech clarity:** {'Excellent' if predicted_sti > 0.75 else 'Good' if predicted_sti > 0.6 else 'Fair'}")
+                
+                st.write(f"- **Surface Coverage:** {(total_panels * 8) / self.room_surface_area * 100:.1f}% of room surface area")
+                st.write(f"- **Cost Efficiency:** ${(total_panels * 25) / (avg_rt60_improvement if avg_rt60_improvement > 0 else 1):.0f} per % RT60 improvement")
             
             with detail_col2:
                 # TODO: Panel Costs section temporarily hidden - needs accurate pricing
@@ -934,7 +1096,7 @@ class TreatmentSimulator:
                 # st.write(f"• Mounting hardware: **${hardware_cost}**")
                 # st.write(f"• Acoustic fabric: **${fabric_cost}**")
                 # 
-                # # Tax note
+                # # # Tax note
                 # st.markdown("---")
                 # st.caption("*All prices in CAD before HST (13%)")
                 # hst_amount = (total_cost + labor_cost + hardware_cost + fabric_cost) * 0.13

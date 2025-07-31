@@ -68,13 +68,13 @@ DASHBOARD_CSS = """
     }
     
     .main-header {
-        background: linear-gradient(90deg, #e74c3c, #ffffff, #e74c3c);
+        /* background: linear-gradient(90deg, #e74c3c, #ffffff, #e74c3c); */
         padding: 1.5rem;
         border-radius: 12px;
         margin-bottom: 2rem;
         text-align: center;
-        color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        color: var(--text-primary);
+        /* box-shadow: 0 4px 15px rgba(0,0,0,0.1); */
     }
     
     .metric-card {
@@ -254,16 +254,25 @@ class AcousticDashboard:
     def render_dashboard(self):
         """Main dashboard rendering function"""
         
-        # Header
-        st.markdown("""
-        <div class="main-header">
-            <h1>CBC Sports 8th Floor Acoustics Dashboard</h1>
-            <p>Interactive visualization of Studio 8 & Hub acoustic treatment analysis</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Header with CBC logo - aligned layout
+        col1, col2 = st.columns([0.15, 5.85])
+        
+        with col1:
+            # CBC Logo - larger and with top margin for vertical alignment
+            st.markdown('<div style="margin-top: 20px;" "margin-left: 20px"></div>', unsafe_allow_html=True)
+            st.image('assets/cbc_gem_logo.png', width=200)
+        
+        with col2:
+            # Main header with reduced left padding for closer alignment
+            st.markdown("""
+            <div class="main-header" style="padding-left: 15px; margin-top: 0;">
+                <h1 style="margin-bottom: 5px;">CBC Sports 8th Floor Acoustics Dashboard</h1>
+                <p style="margin-top: 0;">Interactive visualizations of Studio 8 &amp; The Hub acoustic analysis</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         # Sidebar controls
-        st.sidebar.header("🎛️ Dashboard Controls")
+        st.sidebar.header("Dashboard Controls")
         
         # Get URL query parameters for page persistence
         query_params = st.query_params
@@ -360,8 +369,6 @@ class AcousticDashboard:
     
     def render_executive_dashboard(self, space):
         """Render executive summary dashboard for stakeholders"""
-        
-        st.header(f"Summary of testing in {space}")
         
         # Load space-specific data
         evidence_data = self.load_space_data(space, 'evidence_degradation')
@@ -482,16 +489,111 @@ class AcousticDashboard:
         # fig.update_layout(height=400, showlegend=True)
         # st.plotly_chart(fig, use_container_width=True)
         
-        # Executive summary sections
-        col_left, col_right = st.columns([1, 1])
+        # Executive summary section using native Streamlit components
+        self.render_summary_content(space)
+    
+    def render_summary_content(self, space):
+        """Render comprehensive acoustic treatment summary using native Streamlit components"""
         
-        with col_left:
-            production_impact_content = self.get_production_impact_content(space)
-            st.markdown(production_impact_content, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="solution-highlight">
+        <h3>Summary of Acoustic Treatment Recommendations – Studio 8 & The Hub</h3>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with col_right:
-            solution_content = self.get_recommended_solution_content(space)
-            st.markdown(solution_content, unsafe_allow_html=True)
+        st.markdown("**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
+        
+        st.subheader("Summary")
+        st.write("Presenting acoustic analysis and treatment priorities for **CBC Studio 8** and **The Hub**, based on calibrated Smaart test data, modal analysis, and STI degradation modelling. Both spaces exhibit unique challenges in speech clarity, with tailored treatment plans required to meet broadcast standards.")
+        
+        st.subheader("Interactive Dashboard")
+        #st.write("This dashboard supports decision-making by visualizing treatment impacts: ")
+        st.write("This comprehensive interactive dashboard integrates multiple analysis tools to support acoustic treatment decision-making. Built on empirical measurement data from both spaces, the dashboard provides real-time visualization of treatment impacts, cost modeling, and performance optimization. Stakeholders can explore acoustic characteristics, simulate various treatment scenarios, and validate investment decisions through quantitative analysis of frequency response, reverberation control, and speech intelligibility metrics.")
+        st.write("- **3D Room Models** with clickable measurement positions and real-time panel placement visualization")
+        st.write("- **Frequency Response Explorer** with magnitude, phase, and modal stack analysis")
+        st.write("- **Treatment Simulator** with cost calculator and panel effectiveness modeling")
+        st.write("- **RT60 Heatmap Analyzer** showing before/after acoustic performance")
+        st.write("- **STI Degradation Analysis** with treatment priority recommendations.") 
+        st.write("The dashboard processes actual Smaart measurement data from both spaces, enabling stakeholders to explore acoustic characteristics, simulate treatment scenarios, and validate investment decisions through data-driven insights.")
+        st.write("**TRY:** Adding/Removing panels in the **3D Room Modeller** to view placement prioritization, Filtering by specific measurement positions in the **Data Explorer**, adjusting Panel Count in the **Treatment Simulator** to see effect on RT60 values.")
+
+        st.subheader("Proposed Panel Construction")
+        st.write("- Roxul SAFE'N'SOUND® (etc.) fire-safe and non-toxic mineral wool batts (60kg/m³ density, NRC ratings: 1.10-1.20) for broadband acoustic absorption; various thicknesses (2\", 3\", 5.5\")")
+        st.write("- Pine strapping to build boxes around the mineral wool batts, matching width to thickness of batts")
+        st.write("- Landscaping fabric to wrap batts and pine frames, stapled taut to offer both rigidity and acoustic transparency")
+        st.write("- (optional) Black poly-cotton fabric to wrap panels for camera considerations")
+        
+        st.subheader("Materials Budget (shared June 20, 2025)")
+        
+        # Materials budget table using pandas
+        import pandas as pd
+        budget_data = {
+            'Item': ['Roxul Mineral Wool', 'Wood and Mounting Hardware', 'Landscaping Fabric, Black Fabric', '**Total Estimated Cost before HST**'],
+            'Description & Quantity': [
+                '4 packs of 3" x 2\' x 4\' panels (48 batts @ $12.50 each)',
+                'Furring strips, Z-clips, screws, etc.',
+                '100 feet x 60" wide (~$3 per foot)',
+                ''
+            ],
+            'Unit Cost (CAD)': ['~$600', '~$300', '~$300', ''],
+            'Total (CAD)': ['$600', '$300', '$300', '**$1,200**']
+        }
+        budget_df = pd.DataFrame(budget_data)
+        st.table(budget_df.style.hide(axis='index'))
+        
+        st.subheader("Studio 8 (Television Studio)")
+        
+        st.write("**Diagnostics**")
+        st.write("- Current acoustic environment produces **extremely poor speech intelligibility in broadcast-critical areas** which we can treat by absorbing reflections")
+        st.write("- **Studio 8 contains a symmetrical 24' x 24' volume** at the intersection of **reflective set area (Zone A)** with bright early reflections, **reverberant ceiling cavity (Zone B)** with long decay tails")
+        st.write("- **Severe STI degradation** at corners (25–34%), a primary obstacle presented by **Modal clusters** between 20–250 Hz due to stacked height modes interacting above and below the grid")
+        st.write("- **Ambient HVAC** noise ongoing in surrounding office area, could be dampened slightly by panel treatment (secondary objective)")
+        
+        st.write("**Treatment Plan – Studio 8**")
+        
+        # Studio 8 treatment table
+        studio8_data = {
+            'Location': ['Ceiling Corner Bass Traps', 'Ceiling Clouds', 'Desk Clouds', 'North Wall / NE Corner'],
+            'Panels': ['4 panels, double-batted', '12–14 panels', '3 panels', '5 panels'],
+            'Type': ['Bass traps (11" thickness)', 'Broadband absorbers (5.5" thickness)', 'Clouds (2" thickness)', 'Broadband/mid absorbers (3")'],
+            'Priority': ['1', '2', '3', '4']
+        }
+        studio8_df = pd.DataFrame(studio8_data)
+        st.table(studio8_df.style.hide(axis='index'))
+        
+        st.write("**Studio 8 Total Estimate**")
+        st.write("- **24–30 batts** required @ ~$13/batt + ~$12/framing = ~$750 in materials")
+        st.write("- **Focus:** treating low and mid energy buildup in the ceiling area and corners of the studio to address modal buildup throughout the spectrum")
+        st.write("- **Effectiveness:** Up to **20dB reduction** in modal hot zones")
+        
+        st.subheader("The Hub (Digital Studio)")
+        
+        st.write("**Diagnostics**")
+        st.write("- **Localized clarity issues** caused by glass surfaces enclosing a small space at odd angles")
+        st.write("- **Modal issues manageable** with strategic softening in off-camera areas")
+        
+        st.write("**Treatment Plan – The Hub**")
+        
+        # The Hub treatment table
+        hub_data = {
+            'Position': ['Ceiling Clouds', 'East Wall', 'NE Wall', 'NW Wall', 'LED Panels?', 'North Wall'],
+            'Panels': ['2 panels', '2 panels', '2 panels', '4 panels', '4 panels', '2 panels'],
+            'Purpose': ['Midrange absorbers (3" thick)', 'Broadband absorbers (5.5" thick)', 'Ceiling clouds (3" thick)', 'Wall panels (3" thick)', 'Behind LED Fixtures? (2" thick)', 'Broadband absorbers (5.5" thick)'],
+            'Priority': ['1', '2', '3', '4', '5', '6']
+        }
+        hub_df = pd.DataFrame(hub_data)
+        st.table(hub_df.style.hide(axis='index'))
+        
+        st.write("**The Hub Total Estimate**")
+        st.write("- **10–12 batts** required @ ~$$13/batt + ~$$12/framing = ~$$300 in materials")
+        st.write("- **Focus:** maximizing absorptive surface area coverage in off-camera areas to manage modal stacks in odd acoustic space")
+        st.write("- **Effectiveness:** ~8–12dB smoothing in problem regions")
+        
+        st.subheader("Cross-Space Notes")
+        st.write("- STI degradation values for Studio 8 are simulated based on RT60, EDT, D/R, C10, C35, C50, C80 values recorded in Smaart")
+        st.write("- Treatment plans reflect both **magnitude-based frequency response** and **speech intelligibility deterioration**")
+        st.write("- **No over-treatment** recommended: high-band brightness preserved, low- and mid-band modal stacks attenuated")
+        st.write("- Panels should be strategically placed, not symmetrical, to break up modal symmetry and avoid flutter echoes")
     
     def render_3d_model(self, space, selected_preset=None):
         """Render 3D room model with RT60 heatmap"""
@@ -759,10 +861,7 @@ class AcousticDashboard:
         
         st.header(f"{space} Complete Acoustic Analysis")
         
-        st.info("📊 **Comprehensive Analysis:** All visualization tools and analysis components in one view")
-        
         # Render each section
-        st.subheader("Executive Dashboard")
         self.render_executive_dashboard(space)
         
         st.markdown("---")
@@ -780,161 +879,10 @@ class AcousticDashboard:
         st.subheader("Treatment Simulator")
         self.render_treatment_simulator(space)
         
-    def get_production_impact_content(self, space):
-        """Generate space-specific production impact content with enhanced detail"""
-        # Load actual data for this space
-        evidence_data = self.load_space_data(space, 'evidence_degradation')
-        
-        if evidence_data is None:
-            return f"<p>⚠️ Data not available for {space}</p>"
-        
-        # Calculate actual metrics
-        critical_positions = len(evidence_data[evidence_data['treatment_urgency'] == 'critical'])
-        
-        if space == "Studio 8":
-            # Studio 8 has STI data
-            avg_sti_degradation = evidence_data['sti_degradation_percent'].mean()
-            worst_position = evidence_data.loc[evidence_data['sti_degradation_percent'].idxmax()]
-            
-            return f"""
-            <div class="problem-highlight">
-                <h3>PRODUCTION IMPACT - {space}</h3>
-                <ul>
-                    <li><strong>Severe Corner Loading Effects:</strong> Corner positions exhibit 25-34% STI degradation with extreme nulls exceeding 24dB in critical speech frequencies</li>
-                    <li><strong>Modal Congestion Crisis:</strong> 14+ critical frequency stacks in 20-250Hz range from dual-zone geometry (Zone A set + Zone B ceiling cavity)</li>
-                    <li><strong>Speech Clarity Breakdown:</strong> {avg_sti_degradation:.1f}% average STI degradation with {worst_position['position']} showing {worst_position['sti_degradation_percent']:.1f}% degradation</li>
-                    <li><strong>Host Position Limitations:</strong> Only Host Position A remains usable, but still requires extensive EQ correction (125Hz peak, 1250Hz dip)</li>
-                    <li><strong>Professional Credibility Risk:</strong> Current acoustic environment produces "extremely poor" speech intelligibility in broadcast-critical areas</li>
-                    <li><strong>Equipment Placement Crisis:</strong> All corner positions and ceiling locations must be avoided until treatment completion</li>
-                    <li><strong>Post-Production Burden:</strong> Extensive corrective EQ and processing required, compromising natural sound quality</li>
-                </ul>
-                <p><strong>Critical Assessment:</strong> Based on comprehensive Smaart frequency response analysis, Studio 8 currently fails to meet professional broadcast standards. Immediate acoustic treatment is essential to transform this space into a broadcast-quality facility suitable for CBC's sports and magazine-style programming requirements.</p>
-            </div>
-            """
-        else:
-            # The Hub - no STI data, focus on RT60 issues
-            worst_rt60_pos = evidence_data.loc[evidence_data['RT60_500Hz_increase_percent'].idxmax()]
-            avg_rt60_increase = evidence_data['RT60_500Hz_increase_percent'].mean()
-            geometry_info = "The irregular angular geometry with curved WEST glass wall creates complex reflection patterns"
-            
-            return f"""
-            <div class="problem-highlight">
-                <h3>PRODUCTION IMPACT - {space}</h3>
-                <ul>
-                    <li><strong>Reverberation Issues:</strong> {avg_rt60_increase:.1f}% average RT60 increase from ideal broadcast standards</li>
-                    <li><strong>Worst Performance Area:</strong> {worst_rt60_pos['position']} position with {worst_rt60_pos['RT60_500Hz_increase_percent']:.1f}% RT60 increase</li>
-                    <li><strong>Critical Treatment Needed:</strong> {critical_positions} positions require immediate intervention</li>
-                    <li><strong>Speech Clarity Risk:</strong> Excessive reverberation affects broadcast quality (STI data not recorded)</li>
-                    <li><strong>Professional Impact:</strong> {geometry_info} that degrades speech clarity</li>
-                    <li><strong>Viewer Experience Impact:</strong> Poor acoustic environment affects audience engagement</li>
-                    <li><strong>Regulatory Compliance:</strong> RT60 performance may compromise broadcast quality standards</li>
-                </ul>
-                <p><strong>Critical Risk Assessment:</strong> While STI data wasn't recorded for The Hub, RT60 analysis indicates acoustic treatment needed to achieve broadcast-quality reverberation control for professional programming.</p>
-            </div>
-            """
-            
-    def get_recommended_solution_content(self, space):
-        """Generate space-specific recommended solution content with enhanced detail"""
-        # Load actual data for this space
-        treatment_data = self.load_space_data(space, 'treatment_priority')
-        
-        if treatment_data is None:
-            return f"<p>⚠️ Treatment data not available for {space}</p>"
-        
-        # Calculate actual metrics
-        total_panels = treatment_data['recommended_panels'].apply(lambda x: int(x.split('-')[1].split()[0])).sum()
-        estimated_cost = total_panels * 30
-        critical_positions = len(treatment_data[treatment_data['treatment_urgency'] == 'critical'])
-        high_priority = len(treatment_data[treatment_data['treatment_urgency'] == 'high'])
-        
-        # Get treatment types breakdown
-        treatment_types = treatment_data['treatment_type'].value_counts()
-        
-        if space == "Studio 8":
-            return f"""
-            <div class="solution-highlight">
-                <h3>RECOMMENDED SOLUTIONS - {space}</h3>
-                <ul>
-                    <li><strong>Priority 1 - Corner Bass Traps (URGENT):</strong>
-                        <ul>
-                            <li>4 corner locations with 5.5" thick mineral wool panels (floor-to-ceiling)</li>
-                            <li>Target: 100-500Hz primary, extend to 2kHz for broadband control</li>
-                            <li>Focus: NE corner (worst performance), then SE and SW corners</li>
-                            <li>Expected: 15-20dB improvement in problem frequencies</li>
-                        </ul>
-                    </li>
-                    <li><strong>Priority 2 - Ceiling Cloud Treatment:</strong>
-                        <ul>
-                            <li>Zone A (below grid) host position treatment to support optimal intelligibilty</li>
-                            <li>3-4 panels mounted at lighting grid height above desk</li>
-                            <li>Zone B (above grid) ceiling cavity treatment to reduce modal congestion from above</li>
-                            <li>6-8 center ceiling panels above lighting grid</li>
-                            <li>5.5-inch depth with air gap for low and mid-frequency control</li>
-                            <li>Provides more comprehensive spectrum coverage than folded drape</li>
-                        </ul>
-                    </li>
-                    <li><strong>Priority 3 - Modal Control System:</strong>
-                        <ul>
-                            <li>Strategic wall absorption for first reflections and modal pressure points</li>
-                            <li>Target: 125Hz room mode (9ft dimension) and 315Hz secondary resonance</li>
-                            <li>North wall and NE corner placement (off-camera) for optimal speech clarity</li>
-                        </ul>
-                    </li>
-                    <li><strong>Strategic Equipment Optimization:</strong>
-                        <ul>
-                            <li>Primary host position: Host Position A (best measured response)</li>
-                            <li>Avoid: All corner positions and ceiling-mounted equipment</li>
-                            <li>EQ correction: 125Hz peak (-6dB), 1250Hz boost (+3dB), HF shelf (+2-3dB)</li>
-                        </ul>
-                    </li>
-                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ $30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
-                    <li><strong>Expected Transformation:</strong> 
-                        <ul>
-                            <li>Speech intelligibility improvement: 15-20dB in critical areas</li>
-                            <li>Professional broadcast quality meeting EBU R128 standards</li>
-                            <li>Reduced post-production EQ requirements</li>
-                            <li>Elimination of acoustic fatigue for talent and crew</li>
-                        </ul>
-                    </li>
-                </ul>
-                <p><strong>Implementation Note:</strong> Based on July 15 comprehensive Smaart measurements, this phased approach transforms Studio 8 from "poor to fair" current rating to professional broadcast-grade facility optimized for CBC's sports and magazine-style programming.</p>
-            </div>
-            """
-        else:
-            # Keep existing Hub logic
-            geometry_context = "hexagonal with irregular angles (88° and 38°)"
-            
-            return f"""
-            <div class="solution-highlight">
-                <h3>RECOMMENDED SOLUTIONS - {space}</h3>
-                <ul>
-                    <li><strong>Strategic Panel Placement ({total_panels} Total Panels):</strong>
-                        <ul>
-                            {''.join([f"<li>{count} positions require {treatment_type}</li>" for treatment_type, count in treatment_types.items()])}
-                            <li>Priority focus: {critical_positions} critical positions requiring immediate treatment</li>
-                            <li>Secondary treatment: {high_priority} high-priority positions</li>
-                        </ul>
-                    </li>
-                    <li><strong>Treatment Priority Sequence:</strong>
-                        <ul>
-                            <li>Phase 1: {critical_positions} critical positions (immediate intervention)</li>
-                            <li>Phase 2: {high_priority} high-priority positions (secondary wave)</li>
-                            <li>Phase 3: Remaining positions for optimal performance</li>
-                        </ul>
-                    </li>
-                    <li><strong>Technical Implementation:</strong>
-                        <ul>
-                            <li>Roxul panels (60kg/m³ density) for broadband absorption</li>
-                            <li>NRC ratings: 1.10-1.20 for maximum effectiveness</li>
-                            <li>Optimized for {geometry_context} geometry</li>
-                            <li>Coverage: 30-40% surface area for optimal balance</li>
-                        </ul>
-                    </li>
-                    <li><strong>Budget Analysis:</strong> ${estimated_cost} CAD ({total_panels} panels @ ~$30 each) - {'✅ Within' if estimated_cost <= 1200 else '⚠️ Over'} $1,200 budget</li>
-                    <li><strong>Expected Performance:</strong> Professional broadcast standards, optimized reverberation control</li>
-                </ul>
-            </div>
-            """
+    def get_summary_content(self, space):
+        """Generate comprehensive acoustic treatment summary for both spaces using native Streamlit components"""
+        # Instead of returning complex HTML, we'll render the content directly in the calling method
+        return None
 
 # Main application
 def main():

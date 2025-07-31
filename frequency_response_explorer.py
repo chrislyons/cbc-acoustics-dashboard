@@ -35,16 +35,14 @@ class FrequencyResponseExplorer:
     def load_smaart_data(self, space="Studio 8"):
         """Load and parse Smaart measurement data"""
         try:
-            # Use the new parsed frequency response files (250730)
+            # Use the Complete Frequency Response files 
             if space == "Studio 8":
                 file_candidates = [
-                    "250730-Studio8-Parsed_Frequency_Response.csv",
-                    "250728-Studio8-Complete_Frequency_Response.csv"  # Fallback
+                    "250728-Studio8-Complete_Frequency_Response.csv"
                 ]
             else:  # The Hub
                 file_candidates = [
-                    "250730-TheHub-Parsed_Frequency_Response.csv",
-                    "250729-TheHub-Complete_Frequency_Response.csv"  # Fallback
+                    "250731-TheHub-Complete_Frequency_Response.csv"
                 ]
             
             # Try multiple possible paths for the data files
@@ -59,6 +57,7 @@ class FrequencyResponseExplorer:
                 for detailed_freq_file in possible_paths:
                     if detailed_freq_file.exists():
                         self.smaart_data = pd.read_csv(detailed_freq_file)
+                        
                         unique_positions = self.smaart_data['position'].unique()
                         return True
             
@@ -577,11 +576,14 @@ class FrequencyResponseExplorer:
         
         return fig
     
-    def create_modal_analysis_plot(self):
+    def create_modal_analysis_plot(self, space="Studio 8"):
         """Create modal analysis visualization"""
         
-        # Try to load from CSV file first
-        csv_file = 'data/generated/250728-Studio8-Modal_Stack_Analysis.csv'
+        # Try to load from CSV file first - space-specific
+        if space == "Studio 8":
+            csv_file = 'data/generated/250728-Studio8-Modal_Stack_Analysis.csv'
+        else:  # The Hub
+            csv_file = 'data/generated/250728-TheHub-Modal_Stack_Analysis.csv'
         try:
             modal_df = pd.read_csv(csv_file)
             
@@ -611,27 +613,45 @@ class FrequencyResponseExplorer:
                 modal_df['Q_Factor'] = 25
                 
         except FileNotFoundError:
-            # Fallback to hardcoded data if CSV not found
-            modal_data = {
-                'Frequency_Hz': [23.1, 29.1, 37.8, 50.0, 63.0, 74.3, 108.3, 152.8, 206.8, 258.8, 317.9, 448.4, 561.2, 679.0],
-                'Mode_Type': ['Axial (W)', 'Axial (L)', 'Axial (H)', 'Tangential', 'Axial (W)', 'Axial (L)', 'Tangential', 'Oblique', 'Axial (W)', 'Axial (L)', 'Tangental', 'Oblique', 'Axial (W)', 'Axial (L)'],
-                'Severity': ['High', 'High', 'Medium', 'Medium', 'High', 'Medium', 'Medium', 'Low', 'Medium', 'Medium', 'Low', 'Low', 'Low', 'Low'],
-                'Q_Factor': [45, 38, 28, 35, 42, 32, 25, 18, 22, 28, 15, 12, 10, 8]
-            }
+            # Fallback to hardcoded data if CSV not found - space-specific
+            if space == "Studio 8":
+                modal_data = {
+                    'Frequency_Hz': [23.1, 29.1, 37.8, 50.0, 63.0, 74.3, 108.3, 152.8, 206.8, 258.8, 317.9, 448.4, 561.2, 679.0],
+                    'Mode_Type': ['Axial (W)', 'Axial (L)', 'Axial (H)', 'Tangential', 'Axial (W)', 'Axial (L)', 'Tangential', 'Oblique', 'Axial (W)', 'Axial (L)', 'Tangental', 'Oblique', 'Axial (W)', 'Axial (L)'],
+                    'Severity': ['High', 'High', 'Medium', 'Medium', 'High', 'Medium', 'Medium', 'Low', 'Medium', 'Medium', 'Low', 'Low', 'Low', 'Low'],
+                    'Q_Factor': [45, 38, 28, 35, 42, 32, 25, 18, 22, 28, 15, 12, 10, 8]
+                }
+            else:  # The Hub - hexagonal space with different modal characteristics
+                modal_data = {
+                    'Frequency_Hz': [62, 85, 145, 230, 340, 580, 920, 1450, 2300],
+                    'Mode_Type': ['Hexagonal', 'Tangential', 'Oblique', 'Mixed', 'Hexagonal', 'Mixed', 'High Order', 'High Order', 'High Order'],
+                    'Severity': ['High', 'Medium', 'High', 'Medium', 'High', 'Medium', 'Low', 'Low', 'Low'],
+                    'Q_Factor': [35, 28, 40, 25, 38, 22, 15, 12, 8]
+                }
             modal_df = pd.DataFrame(modal_data)
         
-        # Load frequency response data and calculate average
+        # Load frequency response data and calculate average - space-specific
         freq_response_data = None
         try:
-            freq_file = 'data/generated/250728-Studio8-Complete_Frequency_Response.csv'
+            if space == "Studio 8":
+                freq_file = 'data/generated/250728-Studio8-Complete_Frequency_Response.csv'
+            else:  # The Hub
+                freq_file = 'data/generated/250731-TheHub-Complete_Frequency_Response.csv'
             freq_df = pd.read_csv(freq_file)
             
-            # Filter to frequency range of interest (30-500Hz) and exclude Host A (reference position)
-            freq_filtered = freq_df[
-                (freq_df['Frequency_Hz'] >= 30) & 
-                (freq_df['Frequency_Hz'] <= 500) & 
-                (freq_df['position'] != 'Std8-HostA')
-            ]
+            # Filter to frequency range of interest (30-500Hz) and exclude reference positions
+            if space == "Studio 8":
+                # Exclude Host A (reference position)
+                freq_filtered = freq_df[
+                    (freq_df['Frequency_Hz'] >= 30) & 
+                    (freq_df['Frequency_Hz'] <= 500) & 
+                    (freq_df['position'] != 'Std8-HostA')
+                ]
+            else:  # The Hub - no specific reference position, use all positions
+                freq_filtered = freq_df[
+                    (freq_df['Frequency_Hz'] >= 30) & 
+                    (freq_df['Frequency_Hz'] <= 500)
+                ]
             
             # Calculate average magnitude across non-reference positions
             avg_freq_response = freq_filtered.groupby('Frequency_Hz')['Magnitude_dB'].mean().reset_index()
@@ -711,7 +731,7 @@ class FrequencyResponseExplorer:
             )
         
         fig.update_layout(
-            title="Modal Stack Analysis with Avg. Non-Reference Frequency Response",
+            title=f"{space} - Modal Stack Analysis with Avg. Frequency Response",
             xaxis_title="Frequency (Hz)",
             yaxis_title="Q Factor / Normalized Magnitude",
             xaxis=dict(
@@ -1232,7 +1252,7 @@ class FrequencyResponseExplorer:
             st.plotly_chart(fig_phase, use_container_width=True)
         
         elif analysis_type == "Modal Stack Analysis":
-            fig_modal = self.create_modal_analysis_plot()
+            fig_modal = self.create_modal_analysis_plot(space)
             # Set height for single view
             fig_modal.update_layout(height=800)
             st.plotly_chart(fig_modal, use_container_width=True)

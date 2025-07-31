@@ -104,12 +104,22 @@ class RT60HeatmapAnalyzer:
             print(f"Error parsing {file_path}: {e}")
             return None
     
-    def calculate_rt60_with_panels(self, panel_count):
-        """Calculate RT60 at each measurement position with given panel count using actual measured data"""
+    def calculate_rt60_with_panels(self, panel_count, panel_counts=None):
+        """Calculate RT60 at each measurement position with given panel count using actual measured data
+        
+        Args:
+            panel_count: Total panel count (for backward compatibility)  
+            panel_counts: Dict with panel types and counts, e.g. {'2_inch': 4, '11_inch': 4}
+        """
         rt60_data = {}
         
-        # Calculate panel improvement factor based on count and placement
-        panel_improvement_factor = self.get_panel_improvement_factor(panel_count)
+        # Calculate panel improvement factor based on count/type and placement
+        if panel_counts is not None:
+            # New mode: handle different panel types with different effectiveness
+            panel_improvement_factor = self.get_panel_improvement_factor_by_type(panel_counts)
+        else:
+            # Legacy mode: assume all panels are 5.5" 
+            panel_improvement_factor = self.get_panel_improvement_factor(panel_count)
         
         for pos_name, pos_data in self.measurement_positions.items():
             rt60_freq = {}
@@ -159,6 +169,31 @@ class RT60HeatmapAnalyzer:
         
         return min(improvement, max_improvement)
     
+    def get_panel_improvement_factor_by_type(self, panel_counts):
+        """Calculate overall improvement factor based on panel types and counts"""
+        total_improvement = 0.0
+        
+        # Panel effectiveness coefficients (relative to 5.5" baseline)
+        panel_effectiveness = {
+            "2_inch": 0.6,    # 60% as effective as 5.5"
+            "3_inch": 0.8,    # 80% as effective as 5.5"
+            "5_5_inch": 1.0,  # Baseline effectiveness
+            "11_inch": 1.6    # 60% more effective than 5.5", especially for bass frequencies
+        }
+        
+        # Calculate weighted improvement based on panel types
+        for panel_type, count in panel_counts.items():
+            if count > 0 and panel_type in panel_effectiveness:
+                # Use exponential decay curve for each panel type
+                effectiveness = panel_effectiveness[panel_type]
+                max_improvement_type = 0.4 * effectiveness  # Scale max improvement by effectiveness
+                k = 0.06  # Same decay rate
+                type_improvement = max_improvement_type * (1.0 - np.exp(-k * count))
+                total_improvement += type_improvement
+        
+        # Cap total improvement at reasonable maximum (50% RT60 reduction)
+        return min(total_improvement, 0.5)
+    
     def get_position_panel_effectiveness(self, position_name, frequency):
         """Get position-specific panel effectiveness factors"""
         # Factors based on how much panels at different locations would help each position
@@ -178,8 +213,9 @@ class RT60HeatmapAnalyzer:
         freq_factor = 1.0
         if frequency <= 250:
             # Low frequencies: bass traps more effective in corners
+            # 11" corner bass traps are especially effective at these frequencies
             if "Corner" in position_name:
-                freq_factor = 1.3
+                freq_factor = 1.5  # Enhanced for 11" corner bass traps
         elif frequency >= 2000:
             # High frequencies: more uniform effectiveness
             freq_factor = 0.9

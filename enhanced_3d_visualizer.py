@@ -900,20 +900,22 @@ class Enhanced3DVisualizer:
         
         panels_used = 0
         
-        # Priority 1: Ceiling Corner Bass Traps (5.5") - Purple in diagram
+        # Priority 1: Ceiling Corner Bass Traps - 11" thick for superior bass control
         # 2' down from concrete ceiling (height=14), so at z=12, positioned to cut corners at 45°
         corner_traps = [
-            {"pos": [2, 2, height - 2], "name": "SW Corner Bass Trap", "thickness": 5.5, "orientation": "corner-135deg"},
-            {"pos": [room_width_EW-2, 2, height - 2], "name": "SE Corner Bass Trap", "thickness": 5.5, "orientation": "corner-45deg"},
-            {"pos": [room_width_EW-2, room_length_NS-2, height - 2], "name": "NE Corner Bass Trap", "thickness": 5.5, "orientation": "corner-135deg"},
-            {"pos": [2, room_length_NS-2, height - 2], "name": "NW Corner Bass Trap", "thickness": 5.5, "orientation": "corner-45deg"}
+            {"pos": [2, 2, height - 2], "name": "SW Corner Bass Trap", "thickness": 11.0, "orientation": "corner-135deg"},
+            {"pos": [room_width_EW-2, 2, height - 2], "name": "SE Corner Bass Trap", "thickness": 11.0, "orientation": "corner-45deg"},
+            {"pos": [room_width_EW-2, room_length_NS-2, height - 2], "name": "NE Corner Bass Trap", "thickness": 11.0, "orientation": "corner-135deg"},
+            {"pos": [2, room_length_NS-2, height - 2], "name": "NW Corner Bass Trap", "thickness": 11.0, "orientation": "corner-45deg"}
         ]
         
         for i, trap in enumerate(corner_traps[:min(4, panel_count)]):
+            # Use special color for 11" bass traps to distinguish them
+            bass_trap_color = '#b8860b' if trap['thickness'] == 11.0 else self.colors['bass_trap']  # Dark golden rod for 11"
             self._create_rectangular_panel(
-                fig, trap['pos'], 4.0, 2.0, trap['thickness'],  # 4' wide, 2' tall
-                self.colors['bass_trap'], trap['name'],
-                "Corner bass trap - Modal frequency control", trap['orientation']
+                fig, trap['pos'], 4.0, 2.0, trap['thickness'],  # 4' wide, 2' tall, 11" thick
+                bass_trap_color, trap['name'],
+                f"11\" Corner bass trap - Maximum low-frequency control", trap['orientation']
             )
         panels_used = min(4, panel_count)
         
