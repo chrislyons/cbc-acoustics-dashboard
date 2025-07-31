@@ -251,27 +251,39 @@ class AcousticDashboard:
             st.error(f"Error loading {data_type} data for {space}: {e}")
             return None
     
+    def _get_logo_base64(self):
+        """Convert CBC logo to base64 for inline display"""
+        import base64
+        from pathlib import Path
+        
+        try:
+            logo_path = Path('assets/cbc_gem_logo.png')
+            if logo_path.exists():
+                with open(logo_path, 'rb') as f:
+                    return base64.b64encode(f.read()).decode()
+        except Exception as e:
+            st.error(f"Error loading logo: {e}")
+        return ""
+    
     def render_dashboard(self):
         """Main dashboard rendering function"""
         
-        # Header with CBC logo - aligned layout
-        col1, col2 = st.columns([0.75, 5.25])
+        # Main header - full width
+        st.markdown("""
+        <div class="main-header">
+            <h1 style="margin-bottom: 5px;">CBC Sports 8th Floor Acoustics Dashboard</h1>
+            <p style="margin-top: 0;">Interactive visualizations of Studio 8 &amp; The Hub acoustic analysis</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with col1:
-            # CBC Logo - larger and with top margin for vertical alignment
-            st.markdown('<div style="margin-top: 20px;" "margin-left: 20px"></div>', unsafe_allow_html=True)
-            st.image('assets/cbc_gem_logo.png', width=240)
+        # Sidebar with CBC logo at top
+        # CBC Logo - centered and 90% width of sidebar
+        st.sidebar.markdown("""
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <img src="data:image/png;base64,{}" style="width: 90%; max-width: 300px;">
+        </div>
+        """.format(self._get_logo_base64()), unsafe_allow_html=True)
         
-        with col2:
-            # Main header with reduced left padding for closer alignment
-            st.markdown("""
-            <div class="main-header" style="padding-left: 15px; margin-top: 0;">
-                <h1 style="margin-bottom: 5px;">CBC Sports 8th Floor Acoustics Dashboard</h1>
-                <p style="margin-top: 0;">Interactive visualizations of Studio 8 &amp; The Hub acoustic analysis</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Sidebar controls
         st.sidebar.header("Dashboard Controls")
         
         # Get URL query parameters for page persistence
@@ -501,7 +513,7 @@ class AcousticDashboard:
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("**Version:** 1.02  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
+        st.markdown("**Version:** 1.03  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
         
         st.subheader("Summary")
         st.write("Presenting acoustic analysis and treatment priorities for **CBC Studio 8** and **The Hub**, based on calibrated Smaart test data, modal analysis, and STI degradation modelling. Both spaces exhibit unique challenges in speech clarity, with tailored treatment plans required to meet broadcast standards.")
