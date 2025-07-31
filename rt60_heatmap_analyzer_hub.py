@@ -185,7 +185,7 @@ class RT60HeatmapAnalyzerHub:
         
         return base_effectiveness.get(position_name, 1.0) * freq_factor
     
-    def create_rt60_heatmap(self, panel_count=10):
+    def create_rt60_heatmap(self, panel_count=8):
         """Create RT60 heatmap visualization using actual Hub measurement data"""
         
         # Calculate RT60 values
@@ -325,7 +325,7 @@ class RT60HeatmapAnalyzerHub:
         else:
             st.caption("🟡 Good progress - approaching green zones")
 
-    def create_hub_3d_heatmap_overlay(self, panel_count=10):
+    def create_hub_3d_heatmap_overlay(self, panel_count=8):
         """Create 3D visualization of The Hub with RT60 heatmap overlay"""
         from enhanced_3d_visualizer import Enhanced3DVisualizer
         
@@ -399,7 +399,7 @@ if __name__ == "__main__":
     
     print()
     print("Testing panel count effects for The Hub:")
-    for panels in [0, 5, 10, 15]:
+    for panels in [0, 5, 10, 16]:
         rt60_data = analyzer.calculate_rt60_with_panels(panels)
         all_values = []
         for pos_data in rt60_data.values():
@@ -410,5 +410,5 @@ if __name__ == "__main__":
 
     print()
     print("🎯 Creating RT60 heatmap visualization...")
-    fig = analyzer.create_rt60_heatmap(panel_count=10)
+    fig = analyzer.create_rt60_heatmap(panel_count=8)
     print("✅ Heatmap created successfully!")

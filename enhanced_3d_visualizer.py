@@ -323,7 +323,7 @@ class Enhanced3DVisualizer:
         
         return fig
     
-    def create_hub_detailed_model(self, show_panels=True, panel_count=10):
+    def create_hub_detailed_model(self, show_panels=True, panel_count=8):
         """Create detailed Hub model with treatment visualization based on corrected actual measurements"""
         
         # Hub dimensions from corrected measurements (converting inches to feet)
@@ -638,6 +638,55 @@ class Enhanced3DVisualizer:
                         "North wall panel", 'vertical-long-wall'
                     )
             panels_used += available_wall_panels
+        
+        # Priority 4: Additional Ceiling Treatment - More aggressive ceiling coverage
+        # Additional ceiling panels for higher panel counts
+        if panel_count > 10:
+            additional_ceiling_panels = [
+                {"pos": [-3, -2, ceiling_panel_height], "name": "South Area Ceiling Panel"},
+                {"pos": [3, 2, ceiling_panel_height], "name": "North Area Ceiling Panel"},
+                {"pos": [-1, 3, ceiling_panel_height], "name": "West Area Ceiling Panel"},
+                {"pos": [1, -3, ceiling_panel_height], "name": "East Area Ceiling Panel 2"},
+            ]
+            
+            additional_ceiling_count = min(4, panel_count - panels_used)
+            for i in range(additional_ceiling_count):
+                pos_data = additional_ceiling_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 5.5,
+                    '#87CEEB', pos_data['name'],  # Sky blue for additional ceiling
+                    "Additional ceiling panel - expanded coverage", 'horizontal'
+                )
+            panels_used += additional_ceiling_count
+        
+        # Priority 5: Final Wall Treatment - Maximum coverage for high panel counts
+        # Additional wall panels avoiding on-camera areas
+        if panel_count > 14:
+            final_wall_panels = [
+                {"pos": [1, -3.5, 4], "name": "East Wall Panel 3", "orientation": "east-wall"},
+                {"pos": [3.5, 1, 4], "name": "North Wall Panel 2", "orientation": "north-wall"},
+                {"pos": [-2, -3.5, 4], "name": "South Wall Panel 1", "orientation": "east-wall"},
+                {"pos": [0, 3.5, 4], "name": "West Wall Panel 1", "orientation": "north-wall"},
+            ]
+            
+            final_wall_count = min(4, panel_count - panels_used)
+            for i in range(final_wall_count):
+                pos_data = final_wall_panels[i]
+                orientation = pos_data['orientation']
+                
+                if orientation == "east-wall":
+                    self._create_rectangular_panel(
+                        fig, pos_data['pos'], 4.0, 2.0, 3.0,
+                        '#FF6347', pos_data['name'],  # Tomato color for final treatment
+                        "Final east wall panel", 'vertical-short-wall'
+                    )
+                elif orientation == "north-wall":
+                    self._create_rectangular_panel(
+                        fig, pos_data['pos'], 2.0, 4.0, 3.0,
+                        '#FF6347', pos_data['name'],  # Tomato color for final treatment
+                        "Final north wall panel", 'vertical-long-wall'
+                    )
+            panels_used += final_wall_count
     
     def _add_hub_furniture_accurate(self, fig, width):
         """Add Hub furniture based on actual PDF floorplan"""
@@ -1045,6 +1094,67 @@ class Enhanced3DVisualizer:
                     "Grid cloud - Talent position treatment", 'horizontal'
                 )
             panels_used += cloud_panels
+        
+        # Priority 6: Additional Wall Treatment (3") - Expanded coverage for high panel counts
+        # East and West wall panels for comprehensive first reflection control
+        if panel_count >= 25:
+            additional_wall_panels = [
+                {"pos": [room_width_EW-0.25, room_length_NS/3, 6], "name": "East Wall Panel 2", "orientation": "vertical-long-wall"},
+                {"pos": [room_width_EW-0.25, 2*room_length_NS/3, 6], "name": "East Wall Panel 3", "orientation": "vertical-long-wall"},
+                {"pos": [0.25, room_length_NS/3, 6], "name": "West Wall Panel 1", "orientation": "vertical-long-wall"},
+                {"pos": [0.25, 2*room_length_NS/3, 6], "name": "West Wall Panel 2", "orientation": "vertical-long-wall"},
+            ]
+            
+            additional_wall_count = min(4, panel_count - panels_used)
+            for i in range(additional_wall_count):
+                pos_data = additional_wall_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 3.0,  # 3" thick for wall panels
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "Additional wall panel - Extended reflection control", pos_data['orientation']
+                )
+            panels_used += additional_wall_count
+        
+        # Priority 7: South Wall Treatment (3") - ABOVE GRID to avoid monitor wall
+        # South wall panels positioned above lighting grid (>10') due to monitor wall below
+        if panel_count > 29:
+            south_wall_panels = [
+                {"pos": [room_width_EW/4, 0.25, grid_height + 2], "name": "South Wall Panel 1 (Above Grid)", "orientation": "vertical-short-wall"},
+                {"pos": [3*room_width_EW/4, 0.25, grid_height + 2], "name": "South Wall Panel 2 (Above Grid)", "orientation": "vertical-short-wall"},
+                {"pos": [room_width_EW/2, 0.25, grid_height + 3], "name": "South Wall Panel 3 (High Above Grid)", "orientation": "vertical-short-wall"},
+            ]
+            
+            # Limited to 3 panels due to space constraints above grid
+            south_wall_count = min(3, panel_count - panels_used)
+            for i in range(south_wall_count):
+                pos_data = south_wall_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 3.0,  # 3" thick for wall panels
+                    '#FFA500', pos_data['name'],  # Orange color for south wall
+                    "South wall panel - Above grid (avoids monitor wall)", pos_data['orientation']
+                )
+            panels_used += south_wall_count
+            
+            # Priority 8: Ceiling Cloud Overflow - Any remaining panels go to ceiling clouds
+            # When wall space is exhausted, add extra ceiling clouds for comprehensive coverage
+            if panel_count > panels_used:
+                overflow_ceiling_clouds = [
+                    {"pos": [room_width_EW * 0.8, room_length_NS * 0.2, grid_height + 1], "name": "Overflow Ceiling Cloud 1"},
+                    {"pos": [room_width_EW * 0.2, room_length_NS * 0.8, grid_height + 1], "name": "Overflow Ceiling Cloud 2"},
+                    {"pos": [room_width_EW * 0.6, room_length_NS * 0.4, grid_height + 2], "name": "Overflow Ceiling Cloud 3"},
+                    {"pos": [room_width_EW * 0.4, room_length_NS * 0.6, grid_height + 2], "name": "Overflow Ceiling Cloud 4"},
+                    {"pos": [room_width_EW * 0.9, room_length_NS * 0.9, grid_height + 1.5], "name": "Overflow Ceiling Cloud 5"},
+                ]
+                
+                overflow_count = min(len(overflow_ceiling_clouds), panel_count - panels_used)
+                for i in range(overflow_count):
+                    pos_data = overflow_ceiling_clouds[i]
+                    self._create_rectangular_panel(
+                        fig, pos_data['pos'], 2.0, 4.0, 3.0,  # 3" thick for ceiling clouds
+                        '#98FB98', pos_data['name'],  # Pale green for overflow
+                        "Overflow ceiling cloud - Maximum coverage", 'horizontal'
+                    )
+                panels_used += overflow_count
     
     def _create_rectangular_panel(self, fig, position, width, length, thickness, color, name, description, orientation='horizontal', corner_type=None):
         """Create a proper 3D rectangular acoustic panel (2'x4' with actual thickness)"""

@@ -305,7 +305,7 @@ class AcousticDashboard:
             if hasattr(st.session_state, 'cached_rt60_fig'):
                 st.session_state.cached_rt60_fig = None
             # Reset panel count to space-appropriate default
-            default_count = 0 if selected_space == "The Hub" else 25
+            default_count = 8 if selected_space == "The Hub" else 25
             st.session_state.panel_count = default_count
             # Force rerun to refresh all components
             st.rerun()
@@ -655,18 +655,19 @@ class AcousticDashboard:
         with header_col2:
             # Initialize panel count in session state with space-specific defaults
             if 'panel_count' not in st.session_state:
-                default_count = 0 if space == "The Hub" else 25
+                default_count = 8 if space == "The Hub" else 25
                 st.session_state.panel_count = default_count
             
-            # Panel count text input only (matching Frequency Analysis page style)
+            # Panel count text input with space-specific max values
+            max_panels = 16 if space == "The Hub" else 32
             current_panel_count = st.number_input(
                 label="Panel Count",
                 min_value=0,
-                max_value=40,
+                max_value=max_panels,
                 value=st.session_state.panel_count,
                 step=1,
                 key="3d_panel_number_input",
-                help="Enter panel count directly"
+                help=f"Enter panel count directly (max {max_panels} for {space})"
             )
             # Add delay for smoothness
             import time

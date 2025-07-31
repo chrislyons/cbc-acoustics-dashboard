@@ -1154,19 +1154,23 @@ class FrequencyResponseExplorer:
         
         with header_col2:
             if analysis_type == "STI Degradation Heatmap":
-                # Initialize panel count in session state
+                # Initialize panel count in session state with space-specific defaults
                 if 'panel_count' not in st.session_state:
-                    st.session_state.panel_count = 25
+                    current_space = getattr(st.session_state, 'selected_space', 'Studio 8')
+                    default_count = 8 if current_space == "The Hub" else 25
+                    st.session_state.panel_count = default_count
                 
-                # Panel count text input only (no header)
+                # Panel count text input with space-specific max values
+                current_space = getattr(st.session_state, 'selected_space', 'Studio 8')
+                max_panels = 16 if current_space == "The Hub" else 32
                 current_panel_count = st.number_input(
                     label="Panel Count",
                     min_value=0,
-                    max_value=40,
+                    max_value=max_panels,
                     value=st.session_state.panel_count,
                     step=1,
                     key="panel_number_input",
-                    help="Enter panel count directly"
+                    help=f"Enter panel count directly (max {max_panels} for {current_space})"
                 )
                 # Add delay for smoothness
                 import time

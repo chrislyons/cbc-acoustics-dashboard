@@ -683,23 +683,23 @@ class TreatmentSimulator:
             
             # Initialize session state for panel counts - space-specific defaults aligned with cannon
             if space == "Studio 8":
-                # Studio 8 cannon defaults: 24 total panels (3 + 5 + 12 + 4 = 24)
+                # Studio 8 updated defaults: 25 total panels (3 + 6 + 12 + 4 = 25)
                 # Priority: 4x11" corner bass traps, 12x5.5" ceiling clouds, 3x2" desk clouds, 5x3" north wall
                 if 'panel_2_inch' not in st.session_state:
                     st.session_state.panel_2_inch = 3  # Desk clouds
                 if 'panel_3_inch' not in st.session_state:
-                    st.session_state.panel_3_inch = 5  # North wall panels
+                    st.session_state.panel_3_inch = 6  # Wall panels (updated)
                 if 'panel_5_5_inch' not in st.session_state:
                     st.session_state.panel_5_5_inch = 12  # Ceiling clouds
                 if 'panel_11_inch' not in st.session_state:
                     st.session_state.panel_11_inch = 4  # Corner bass traps
             else:
-                # The Hub cannon defaults: 16 total panels (4 + 8 + 4 + 0 = 16)
+                # The Hub updated defaults: 8 total panels (0 + 4 + 4 + 0 = 8)
                 # Priority: 2x3" ceiling clouds, 2x5.5" east wall, 2x3" NE wall, 4x3" NW wall, 4x2" LED panels, 2x5.5" north wall
                 if 'panel_2_inch' not in st.session_state:
-                    st.session_state.panel_2_inch = 4  # LED panel locations
+                    st.session_state.panel_2_inch = 0  # Reduced for optimal 8-panel config
                 if 'panel_3_inch' not in st.session_state:
-                    st.session_state.panel_3_inch = 8  # Ceiling clouds + NE wall + NW wall (2+2+4)
+                    st.session_state.panel_3_inch = 4  # Reduced for optimal 8-panel config
                 if 'panel_5_5_inch' not in st.session_state:
                     st.session_state.panel_5_5_inch = 4  # East wall + North wall (2+2)
                 if 'panel_11_inch' not in st.session_state:

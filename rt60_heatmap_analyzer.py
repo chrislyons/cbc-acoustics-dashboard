@@ -396,13 +396,17 @@ class RT60HeatmapAnalyzer:
         with col1:
             st.markdown("**Controls**")
             
-            # Panel count slider
+            # Panel count slider with space-specific max values
+            current_space = getattr(st.session_state, 'selected_space', 'Studio 8')
+            max_panels = 16 if current_space == "The Hub" else 32
+            space_default = 8 if current_space == "The Hub" else 25
+            default_value = min(space_default, max_panels)  # Don't exceed the max
             panel_count = st.slider(
                 "Treatment Panels", 
                 min_value=0, 
-                max_value=40, 
-                value=25,
-                help="Number of acoustic treatment panels to model"
+                max_value=max_panels, 
+                value=default_value,
+                help=f"Number of acoustic treatment panels to model (max {max_panels} for {current_space})"
             )
             
             # Visualization options

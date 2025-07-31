@@ -159,12 +159,13 @@ class RT60HeatmapAnalyzer:
         if panel_count == 0:
             return 0.0
         
-        # Diminishing returns curve: significant improvement up to ~25 panels, then levels off
-        # Maximum improvement is about 40% RT60 reduction with full treatment
-        max_improvement = 0.4
+        # Diminishing returns curve: significant improvement up to ~32 panels (new max), then levels off
+        # Maximum improvement is about 45% RT60 reduction with full treatment (32 panels)
+        max_improvement = 0.45
         
         # Use exponential decay: improvement = max * (1 - e^(-k*panels))
-        k = 0.06  # Tuning parameter for curve shape
+        # Adjusted k for 32-panel curve with overflow to ceiling clouds
+        k = 0.05  # Slightly lower k for extended range
         improvement = max_improvement * (1.0 - np.exp(-k * panel_count))
         
         return min(improvement, max_improvement)
@@ -380,7 +381,7 @@ if __name__ == "__main__":
     
     print()
     print("Testing panel count effects:")
-    for panels in [0, 10, 25, 40]:
+    for panels in [0, 10, 25, 32]:
         rt60_data = analyzer.calculate_rt60_with_panels(panels)
         all_values = []
         for pos_data in rt60_data.values():
