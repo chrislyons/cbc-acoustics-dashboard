@@ -501,7 +501,7 @@ class AcousticDashboard:
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("**Version:** 1.01  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
+        st.markdown("**Version:** 1.02  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
         
         st.subheader("Summary")
         st.write("Presenting acoustic analysis and treatment priorities for **CBC Studio 8** and **The Hub**, based on calibrated Smaart test data, modal analysis, and STI degradation modelling. Both spaces exhibit unique challenges in speech clarity, with tailored treatment plans required to meet broadcast standards.")
