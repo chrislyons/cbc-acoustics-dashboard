@@ -154,7 +154,9 @@ class DataExplorer:
         
         # Create friendly descriptions based on content
         if "Complete_Frequency_Response" in filename:
-            return f"{space} - Complete Frequency Response ({timestamp})"
+            return f"{space} - Frequency Response ({timestamp})"
+        elif "Parsed_Frequency_Response" in filename:
+            return f"{space} - Frequency Response ({timestamp})"
         elif "Detailed_Frequency_Response" in filename:
             return f"{space} - Detailed Frequency Response ({timestamp})"
         elif "Frequency_Response_Data" in filename:
@@ -270,12 +272,12 @@ class DataExplorer:
             defaults = []
             file_list = list(space_filtered_datasets.keys())
             
-            # Priority 1: Complete Frequency Response for the selected space
-            complete_freq_files = [f for f in file_list if "Complete_Frequency_Response" in f]
-            if complete_freq_files:
-                # Get the latest complete frequency response file for this space
-                complete_freq_files.sort(reverse=True)
-                defaults.append(complete_freq_files[0])
+            # Priority 1: Parsed Frequency Response for the selected space
+            parsed_freq_files = [f for f in file_list if "Parsed_Frequency_Response" in f]
+            if parsed_freq_files:
+                # Get the latest parsed frequency response file for this space
+                parsed_freq_files.sort(reverse=True)
+                defaults.append(parsed_freq_files[0])
             
             return defaults
         
@@ -295,18 +297,21 @@ class DataExplorer:
                 # Skip Treatment Priority Matrix dataset
                 if "Treatment_Priority" in filename:
                     continue
+                # Skip Complete Frequency Response dataset (replaced by Parsed Frequency Response)
+                if "Complete_Frequency_Response" in filename:
+                    continue
                 if 'Space' in df.columns and selected_space in df['Space'].values:
                     space_filtered_datasets[filename] = df
             
             # Get smart defaults for this specific space
             smart_defaults = get_smart_defaults(selected_space)
             
-            # Simple list of datasets with clean names - Complete Frequency Response first
+            # Simple list of datasets with clean names - Parsed Frequency Response first
             file_list = list(space_filtered_datasets.keys())
             
-            # Sort to prioritize Complete Frequency Response at the top
+            # Sort to prioritize Parsed Frequency Response at the top
             def sort_priority(filename):
-                if "Complete_Frequency_Response" in filename:
+                if "Parsed_Frequency_Response" in filename:
                     return 0  # Highest priority
                 elif "Modal_Stack" in filename:
                     return 1  # Second priority

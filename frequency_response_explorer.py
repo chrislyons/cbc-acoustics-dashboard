@@ -32,25 +32,43 @@ class FrequencyResponseExplorer:
                 return col
         return None
         
-    def load_smaart_data(self):
+    def load_smaart_data(self, space="Studio 8"):
         """Load and parse Smaart measurement data"""
         try:
-            # Load the complete frequency response data from Smaart screenshots (all 8 positions)
-            detailed_freq_file = self.base_path / "data/generated/250728-Studio8-Complete_Frequency_Response.csv"
-            if detailed_freq_file.exists():
-                self.smaart_data = pd.read_csv(detailed_freq_file)
-                unique_positions = self.smaart_data['position'].unique()
-                return True
-            else:
-                st.error(f"Detailed frequency response file not found: {detailed_freq_file}")
-                return False
+            # Use the new parsed frequency response files (250730)
+            if space == "Studio 8":
+                file_candidates = [
+                    "250730-Studio8-Parsed_Frequency_Response.csv",
+                    "250728-Studio8-Complete_Frequency_Response.csv"  # Fallback
+                ]
+            else:  # The Hub
+                file_candidates = [
+                    "250730-TheHub-Parsed_Frequency_Response.csv",
+                    "250729-TheHub-Complete_Frequency_Response.csv"  # Fallback
+                ]
+            
+            # Try multiple possible paths for the data files
+            for filename in file_candidates:
+                possible_paths = [
+                    self.base_path / f"data/generated/{filename}",
+                    Path(f"data/generated/{filename}"),
+                    Path(f"./data/generated/{filename}"),
+                    Path(f"/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard/data/generated/{filename}")
+                ]
                 
+                for detailed_freq_file in possible_paths:
+                    if detailed_freq_file.exists():
+                        self.smaart_data = pd.read_csv(detailed_freq_file)
+                        unique_positions = self.smaart_data['position'].unique()
+                        return True
+            
+            # File not found in any location - NO SYNTHETIC DATA
+            st.error(f"Frequency Response data file not found. Real measurement data required.")
+            return False
+            
         except Exception as e:
             st.error(f"Error loading Smaart data: {e}")
-            
-        # Create synthetic data if no real data available
-        self.create_synthetic_data()
-        return False
+            return False
     
     def create_synthetic_data(self):
         """Create realistic synthetic acoustic data based on analysis"""
@@ -340,7 +358,7 @@ class FrequencyResponseExplorer:
         fig.update_yaxes(title_text="Phase (degrees)", row=2, col=1)
         
         fig.update_layout(
-            title="Interactive Frequency Response Analysis",
+            title="Frequency Response Analysis",
             height=800,
             hovermode='x unified',
             showlegend=True,
@@ -851,13 +869,37 @@ class FrequencyResponseExplorer:
         """Create STI degradation heatmap showing improvement with acoustic treatment"""
         
         try:
-            smaart_path = Path('data/raw/250715-smaartLogs/Std8')
+            # Try multiple possible paths for smaart data
+            possible_smaart_paths = [
+                Path('data/raw/250715-smaartLogs/Std8'),
+                self.base_path / 'data/raw/250715-smaartLogs/Std8',
+                Path('/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard/data/raw/250715-smaartLogs/Std8')
+            ]
             
-            # Load treatment priority data
-            priority_file = self.base_path / 'data/generated/250728-Studio8-Treatment_Priority_Matrix.csv'
-            if priority_file.exists():
-                priority_df = pd.read_csv(priority_file)
-            else:
+            smaart_path = None
+            for path in possible_smaart_paths:
+                if path.exists():
+                    smaart_path = path
+                    break
+            
+            if smaart_path is None:
+                st.error("Smaart data directory not found")
+                return None
+            
+            # Load treatment priority data with multiple possible paths
+            possible_priority_paths = [
+                self.base_path / 'data/generated/250728-Studio8-Treatment_Priority_Matrix.csv',
+                Path('data/generated/250728-Studio8-Treatment_Priority_Matrix.csv'),
+                Path('/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard/data/generated/250728-Studio8-Treatment_Priority_Matrix.csv')
+            ]
+            
+            priority_df = None
+            for priority_file in possible_priority_paths:
+                if priority_file.exists():
+                    priority_df = pd.read_csv(priority_file)
+                    break
+            
+            if priority_df is None:
                 st.error("Treatment priority data not found")
                 return None
             
@@ -1052,7 +1094,7 @@ class FrequencyResponseExplorer:
             st.error(f"Error creating adjusted STI heatmap: {e}")
             return None
     
-    def render_frequency_explorer(self):
+    def render_frequency_explorer(self, space="Studio 8"):
         """Main function to render the frequency response explorer"""
         
         # Two-column header layout with vertical alignment
@@ -1115,12 +1157,12 @@ class FrequencyResponseExplorer:
                 # Add vertical spacing to align with dropdown label
                 st.markdown('<div style="margin-top: 0.5rem;"></div>', unsafe_allow_html=True)
                 # Page disclaimer for other analysis types
-                st.info("**📊 Test data below reflects the present state of this production space, prior to treatment.**")
+                st.info("**📊 Test data below reflects the present state of this production space prior to panel treatment.**")
                 # Set default panel count for other views
                 current_panel_count = st.session_state.get('panel_count', 25)
         
-        # Load data
-        data_loaded = self.load_smaart_data()
+        # Load data for the specified space
+        data_loaded = self.load_smaart_data(space)
         
         # Control panel in sidebar (simplified)
         with st.sidebar:
@@ -1174,9 +1216,12 @@ class FrequencyResponseExplorer:
             
             with col2:
                 fig_heatmap_after = self.create_adjusted_degradation_heatmap(current_panel_count)
-                # Increase height for single view
-                fig_heatmap_after.update_layout(height=600)
-                st.plotly_chart(fig_heatmap_after, use_container_width=True)
+                if fig_heatmap_after is not None:
+                    # Increase height for single view
+                    fig_heatmap_after.update_layout(height=600)
+                    st.plotly_chart(fig_heatmap_after, use_container_width=True)
+                else:
+                    st.error("Unable to generate adjusted heatmap - check data files")
         
         elif analysis_type == "Magnitude Response":
             fig_mag = self.create_magnitude_response_plot(freq_range)

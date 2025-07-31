@@ -302,7 +302,7 @@ class AcousticDashboard:
             st.rerun()
         
         # Visualization type with persistence
-        page_options = ["Summary", "Data Explorer", "3D Room Model", "Frequency Analysis", "Treatment Simulator", "Complete Analysis"]
+        page_options = ["Summary", "Data Explorer", "3D Room Model", "Frequency Response", "Treatment Simulator", "Complete Analysis"]
         viz_type = st.sidebar.selectbox(
             "Viewer",
             page_options,
@@ -351,7 +351,7 @@ class AcousticDashboard:
                 st.error("Data Explorer component not available due to import errors")
         elif viz_type == "3D Room Model":
             self.render_3d_model(selected_space, selected_preset)
-        elif viz_type == "Frequency Analysis":
+        elif viz_type == "Frequency Response":
             self.render_frequency_analysis(selected_space)
         elif viz_type == "Treatment Simulator":
             self.render_treatment_simulator(selected_space)
@@ -730,7 +730,8 @@ class AcousticDashboard:
                     # Component doesn't support space parameter yet, render without note
                     self.freq_explorer.render_frequency_explorer()
             except Exception as e:
-                self.freq_explorer.render_frequency_explorer()
+                st.error(f"Error rendering frequency explorer: {e}")
+                # Don't call again - this was causing duplicate key errors
         else:
             st.error("Frequency explorer not available")
     
@@ -771,7 +772,7 @@ class AcousticDashboard:
         
         st.markdown("---")
         
-        st.subheader("Frequency Analysis")
+        st.subheader("Frequency Response")
         self.render_frequency_analysis(space)
         
         st.markdown("---")
