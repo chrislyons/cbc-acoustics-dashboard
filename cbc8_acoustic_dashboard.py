@@ -530,7 +530,7 @@ class AcousticDashboard:
         budget_data = {
             'Item': ['Roxul Mineral Wool', 'Wood and Mounting Hardware', 'Landscaping Fabric, Black Fabric', '**Total Estimated Cost before HST**'],
             'Description & Quantity': [
-                '4 packs of 3" x 2\' x 4\' panels (48 batts @ $12.50 each)',
+                '4 packs of 2"/3"/5.5" x 2\' x 4\' panels (48 batts @ $12.50 each)',
                 'Furring strips, Z-clips, screws, etc.',
                 '100 feet x 60" wide (~$3 per foot)',
                 ''
@@ -577,7 +577,7 @@ class AcousticDashboard:
         # The Hub treatment table
         hub_data = {
             'Position': ['Ceiling Clouds', 'East Wall', 'NE Wall', 'NW Wall', 'LED Panels?', 'North Wall'],
-            'Panels': ['2 panels', '2 panels', '2 panels', '4 panels', '4 panels', '2 panels'],
+            'Panels': ['2 panels', '2 panels', '2 panels', '2 panels', '4 panels', '2 panels'],
             'Purpose': ['Midrange absorbers (3" thick)', 'Broadband absorbers (5.5" thick)', 'Ceiling clouds (3" thick)', 'Wall panels (3" thick)', 'Behind LED Fixtures? (2" thick)', 'Broadband absorbers (5.5" thick)'],
             'Priority': ['1', '2', '3', '4', '5', '6']
         }
@@ -585,7 +585,7 @@ class AcousticDashboard:
         st.table(hub_df.style.hide(axis='index'))
         
         st.write("**The Hub Total Estimate**")
-        st.write("- **10–12 batts** required = ~ $300 in materials")
+        st.write("- **10–14 batts** required = ~ $350 in materials")
         st.write("- **Focus:** maximizing absorptive surface area coverage in off-camera areas to manage modal stacks in odd acoustic space")
         st.write("- **Effectiveness:** ~8–12dB smoothing in problem regions")
         
