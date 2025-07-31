@@ -255,7 +255,7 @@ class AcousticDashboard:
         """Main dashboard rendering function"""
         
         # Header with CBC logo - aligned layout
-        col1, col2 = st.columns([1, 5])
+        col1, col2 = st.columns([0.75, 5.25])
         
         with col1:
             # CBC Logo - larger and with top margin for vertical alignment
