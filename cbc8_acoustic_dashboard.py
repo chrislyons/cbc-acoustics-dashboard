@@ -562,9 +562,9 @@ class AcousticDashboard:
         st.table(studio8_df.style.hide(axis='index'))
         
         st.write("**Studio 8 Total Estimate**")
-        st.write("- **24–30 batts** required @ ~ $13/batt + ~ $12/framing = ~ $750 in materials")
+        st.write("- **24–30 batts** required = ~ $750 in materials")
         st.write("- **Focus:** treating low and mid energy buildup in the ceiling area and corners of the studio to address modal buildup throughout the spectrum")
-        st.write("- **Effectiveness:** Up to **20dB reduction** in modal hot zones")
+        st.write("- **Effectiveness:** Up to **18dB reduction** in modal hot zones")
         
         st.subheader("The Hub (Digital Studio)")
         
@@ -585,7 +585,7 @@ class AcousticDashboard:
         st.table(hub_df.style.hide(axis='index'))
         
         st.write("**The Hub Total Estimate**")
-        st.write("- **10–12 batts** required @ ~ $$13/batt + ~ $$12/framing = ~ $$300 in materials")
+        st.write("- **10–12 batts** required = ~ $300 in materials")
         st.write("- **Focus:** maximizing absorptive surface area coverage in off-camera areas to manage modal stacks in odd acoustic space")
         st.write("- **Effectiveness:** ~8–12dB smoothing in problem regions")
         
@@ -594,6 +594,35 @@ class AcousticDashboard:
         st.write("- Treatment plans reflect both **magnitude-based frequency response** and **speech intelligibility deterioration**")
         st.write("- **No over-treatment** recommended: high-band brightness preserved, low- and mid-band modal stacks attenuated")
         st.write("- Panels should be strategically placed, not symmetrical, to break up modal symmetry and avoid flutter echoes")
+        
+        st.subheader("Glossary of Terms")
+        
+        st.write("**RT60 (Reverberation Time)**")
+        st.write("Time (seconds) it takes for sound energy in a room to decrease by 60 dB after sound stops; measures reverberation.")
+        
+        st.write("**STI (Speech Transmission Index)**")
+        st.write("Numerical metric (0–1) assessing speech intelligibility based on signal modulation integrity; higher STI indicates clearer speech.")
+        
+        st.write("**IR (Impulse Response)**")
+        st.write("Time-domain response capturing how an acoustic environment reacts to an impulse; basis for analyzing reflections and reverberation.")
+        
+        st.write("**ETC (Energy-Time Curve)**")
+        st.write("Graph showing sound energy arrival over time, derived from impulse response; used to identify direct sound, reflections, and acoustic anomalies.")
+        
+        st.write("**C10 (Clarity Index, 10 ms)**")
+        st.write("Ratio (dB) of early sound energy (within 10 ms) to late energy, measuring musical clarity; higher values indicate clearer musical articulation.")
+        
+        st.write("**C35 (Clarity Index, 35 ms)**")
+        st.write("Similar to C30 but using 35 ms threshold; less common intermediate clarity metric.")
+        
+        st.write("**C50 (Clarity Index, 50 ms)**")
+        st.write("Ratio (dB) of early sound energy (within 50 ms) to late energy, quantifying speech clarity; higher values correlate with clearer speech intelligibility.")
+        
+        st.write("**C80 (Clarity Index, 80 ms)**")
+        st.write("Ratio (dB) of early sound energy (within 80 ms) to late energy, used to assess musical clarity and definition.")
+        
+        st.write("**EDT (Early Decay Time)**")
+        st.write("Time (seconds) for initial 10 dB sound decay extrapolated to 60 dB; correlates strongly with perceived reverberation.")
     
     def render_3d_model(self, space, selected_preset=None):
         """Render 3D room model with RT60 heatmap"""

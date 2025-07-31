@@ -356,7 +356,7 @@ class Enhanced3DVisualizer:
         # self._add_hub_furniture_corrected(fig)
         
         fig.update_layout(
-            title="The Hub - Detailed 3D Model with Acoustic Treatment (In Progress)",
+            title="The Hub - Detailed 3D Model with Acoustic Treatment (Corrected Dimensions)",
             scene=dict(
                 xaxis_title="(feet)",
                 yaxis_title="(feet)", 
