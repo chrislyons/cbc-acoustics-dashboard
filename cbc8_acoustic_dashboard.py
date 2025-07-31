@@ -255,12 +255,12 @@ class AcousticDashboard:
         """Main dashboard rendering function"""
         
         # Header with CBC logo - aligned layout
-        col1, col2 = st.columns([0.15, 5.85])
+        col1, col2 = st.columns([1, 5])
         
         with col1:
             # CBC Logo - larger and with top margin for vertical alignment
             st.markdown('<div style="margin-top: 20px;" "margin-left: 20px"></div>', unsafe_allow_html=True)
-            st.image('assets/cbc_gem_logo.png', width=600)
+            st.image('assets/cbc_gem_logo.png', width=240)
         
         with col2:
             # Main header with reduced left padding for closer alignment
