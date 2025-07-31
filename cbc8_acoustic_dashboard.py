@@ -900,12 +900,10 @@ class AcousticDashboard:
                 [0.05, '#003399'],   # Deep blue
                 [0.07, '#0066CC'],   # Medium blue
                 [0.09, '#3399FF'],   # Lighter blue
-                [0.12, '#4DA6FF'],   # Blue continuing
-                [0.15, '#66B3FF'],   # Light blue
-                [0.18, '#80CCFF'],   # Very light blue
-                [0.2, '#99DDFF'],    # Blue-green transition
-                [0.22, '#B3EEFF'],   # Blue-green bridge
-                [0.25, '#40C040'],   # GREEN START - Hub ideal range begins
+                [0.15, '#4DA6FF'],   # Blue continuing
+                [0.18, '#5555AA'],   # Blue transitioning 
+                [0.22, '#4477BB'],   # Blue-green transition
+                [0.25, '#40C040'],   # GREEN START - Hub ideal range (0.2s)
                 [0.27, '#50D050'],   # Green progression
                 [0.29, '#60E060'],   # Target green center
                 [0.32, '#70F070'],   # GREEN END - Hub ideal range (0.3s)
