@@ -15,7 +15,9 @@ import re
 
 class FrequencyResponseExplorer:
     def __init__(self):
-        self.base_path = Path('/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard')
+        # Default to the directory containing this file so the code works
+        # regardless of where the repository is cloned.
+        self.base_path = Path(__file__).resolve().parent
         self.smaart_data = None
         self.measurement_positions = {}
         self.position_column = None
@@ -1208,8 +1210,20 @@ class FrequencyResponseExplorer:
                     st.write(f"- **Best Performance:** {best_pos[0]} ({best_pos[1]['degradation']:.1f}% STI degradation)")
                 
                 # Average metrics
-                avg_sti = np.mean([p['STI'] for p in self.measurement_positions.values() if 'Reference' not in p])
-                avg_rt60 = np.mean([p['RT60'] for p in self.measurement_positions.values() if 'Reference' not in p])
+                # Exclude the reference microphone position when calculating
+                # averages. Previously the check looked for the string
+                # 'Reference' in the value dictionary which always evaluated to
+                # True and incorrectly included all positions.
+                avg_sti = np.mean([
+                    metrics['STI']
+                    for name, metrics in self.measurement_positions.items()
+                    if 'Reference' not in name
+                ])
+                avg_rt60 = np.mean([
+                    metrics['RT60']
+                    for name, metrics in self.measurement_positions.items()
+                    if 'Reference' not in name
+                ])
                 st.write(f"- **Average STI:** {avg_sti:.2f} (Target: >0.75)")
                 st.write(f"- **Average RT60:** {avg_rt60:.2f}s (Target: 0.3-0.5s)")
 

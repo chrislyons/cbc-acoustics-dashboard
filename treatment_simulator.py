@@ -15,7 +15,9 @@ import json
 
 class TreatmentSimulator:
     def __init__(self):
-        self.base_path = Path('/Users/chrislyons/Documents/CL/dev/std8/cbc-interactive-dashboard')
+        # Use the current file location as the base path so the code works on
+        # any machine without hard coded absolute paths.
+        self.base_path = Path(__file__).resolve().parent
         
         # Load default space data (will be updated in render method)
         self._load_space_parameters("Studio 8")
