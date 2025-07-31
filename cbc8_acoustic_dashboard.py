@@ -501,7 +501,7 @@ class AcousticDashboard:
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
+        st.markdown("**Version:** 1.01  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
         
         st.subheader("Summary")
         st.write("Presenting acoustic analysis and treatment priorities for **CBC Studio 8** and **The Hub**, based on calibrated Smaart test data, modal analysis, and STI degradation modelling. Both spaces exhibit unique challenges in speech clarity, with tailored treatment plans required to meet broadcast standards.")
@@ -895,34 +895,35 @@ class AcousticDashboard:
             y=frequencies,
             hovertemplate='%{hovertext}<extra></extra>',
             hovertext=hover_text,
+            showscale=True,
             colorscale=[
                 [0.0, '#000080'],    # Dark blue for very low RT60 (0.15s)
                 [0.05, '#003399'],   # Deep blue
-                [0.07, '#0066CC'],   # Medium blue
-                [0.09, '#3399FF'],   # Lighter blue transitioning to green
-                [0.09, '#4DA6FF'],   # Blue-green transition
-                [0.12, '#40C040'],   # GREEN START - Hub ideal range (0.2s)
-                [0.15, '#48C848'],   # Early green
+                [0.08, '#0066CC'],   # Medium blue
+                [0.10, '#3399FF'],   # Lighter blue
+                [0.12, '#4DA6FF'],   # Blue-green transition
+                [0.13, '#40C040'],   # GREEN START - Hub ideal range (0.2s)
+                [0.16, '#48C848'],   # Early green
                 [0.18, '#50D050'],   # Green progression
                 [0.22, '#58D858'],   # Target green center (0.25s)
                 [0.27, '#60E060'],   # Center green
                 [0.29, '#68E868'],   # Late green
-                [0.32, '#70F070'],   # GREEN END - Hub ideal range (0.3s)
-                [0.35, '#80FF80'],   # Light green transition
-                [0.37, '#90FF90'],   # Lighter green
-                [0.39, '#A0FFA0'],   # Green-yellow bridge
-                [0.4, '#CCFF88'],    # Yellow-green
-                [0.45, '#EEFF77'],   # Soft yellow-green
-                [0.48, '#FFFF66'],   # Standard yellow
-                [0.52, '#FFEE55'],   # Gentle yellow
-                [0.55, '#FFD700'],   # Gold yellow
-                [0.58, '#FFCC33'],   # Gold transition
-                [0.62, '#FFA500'],   # Orange
-                [0.68, '#FF8C00'],   # Dark orange
+                [0.31, '#70F070'],   # GREEN END - Hub ideal range (0.3s)
+                [0.33, '#80FF80'],   # Light green transition
+                [0.35, '#90FF90'],   # Lighter green
+                [0.37, '#A0FFA0'],   # Green-yellow bridge
+                [0.39, '#CCFF88'],    # Yellow-green
+                [0.43, '#EEFF77'],   # Soft yellow-green
+                [0.46, '#FFFF66'],   # Standard yellow
+                [0.50, '#FFEE55'],   # Gentle yellow
+                [0.52, '#FFD700'],   # Gold yellow
+                [0.55, '#FFCC33'],   # Gold transition
+                [0.60, '#FFA500'],   # Orange
+                [0.66, '#FF8C00'],   # Dark orange
                 [0.72, '#FF6347'],   # Tomato/red-orange
-                [0.8, '#FF4500'],    # Red-orange
-                [0.85, '#FF3300'],   # Bright red
-                [0.9, '#E60000'],    # Deep red
+                [0.77, '#FF4500'],    # Red-orange
+                [0.83, '#FF3300'],   # Bright red
+                [0.88, '#E60000'],    # Deep red
                 [1.0, '#CC0000']     # DEEPEST RED at 0.7s
             ],
             zmin=0.15,   # Minimum possible with maximum treatment
@@ -1012,15 +1013,15 @@ class AcousticDashboard:
         current_avg = base_avg * (1 - panel_reduction)
         
         # Determine status for Hub (0.2-0.3s target range)
-        if current_avg >= 0.5:
+        if current_avg >= 0.44:
             status = "🔴 Needs Treatment"
             status_color = "#e74c3c"
             recommendation = "Add panels to problem areas shown in red"
-        elif current_avg < 0.2:
+        elif current_avg < 0.28:
             status = "🔵 Excellent Control"
             status_color = "#3498db"
             recommendation = "Optimal RT60 achieved for compact space"
-        elif current_avg <= 0.3:
+        elif current_avg <= 0.38:
             status = "🟢 Target Range"
             status_color = "#27ae60"
             recommendation = "Ideal RT60 for compact broadcast space"

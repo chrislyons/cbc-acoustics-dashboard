@@ -645,9 +645,9 @@ class TreatmentSimulator:
         
         # Show space-specific info
         if space == "The Hub":
-            st.info("**Interactive Panel Planning:** Build your acoustic treatment package for The Hub. Note: Currently showing Studio 8 data as baseline - Hub-specific calculations coming soon.")
+            st.info("**Interactive Panel Planning:** Build an acoustic treatment package for The Hub by selecting quantities of different panel thicknesses. See real-time acoustic impact and cost calculations..")
         else:
-            st.info("**Interactive Panel Planning:** Build your acoustic treatment package by selecting quantities of different panel thicknesses. See real-time acoustic impact and cost calculations.")
+            st.info("**Interactive Panel Planning:** Build an acoustic treatment package for Studio 8 by selecting quantities of different panel thicknesses. See real-time acoustic impact and cost calculations.")
         
         # Load space-specific data
         self._load_space_parameters(space)
