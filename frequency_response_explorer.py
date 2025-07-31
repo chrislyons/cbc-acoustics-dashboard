@@ -1163,6 +1163,12 @@ class FrequencyResponseExplorer:
                 # Panel count text input with space-specific max values
                 current_space = getattr(st.session_state, 'selected_space', 'Studio 8')
                 max_panels = 16 if current_space == "The Hub" else 32
+                
+                # Reset panel count if it exceeds the current space's maximum
+                if st.session_state.panel_count > max_panels:
+                    default_count = 8 if current_space == "The Hub" else 25
+                    st.session_state.panel_count = default_count
+                
                 current_panel_count = st.number_input(
                     label="Panel Count",
                     min_value=0,
