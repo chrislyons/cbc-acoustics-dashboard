@@ -745,10 +745,8 @@ class AcousticDashboard:
                     if space == "Studio 8":
                         fig = self.visualizer_3d.create_studio8_detailed_model(show_panels=True, panel_count=panel_count)
                     elif space == "The Hub":
-                        # Convert panel count to default panel specifications for The Hub
-                        # Default allocation: 0x 11", prioritize 5.5" and 3" panels
-                        panel_specs = self.convert_panel_count_to_specs_hub(panel_count)
-                        fig = self.visualizer_3d.create_hub_detailed_model(show_panels=True, panel_specs=panel_specs)
+                        # For now, use simple panel_count until 3D visualizer is updated across all environments
+                        fig = self.visualizer_3d.create_hub_detailed_model(show_panels=True, panel_count=panel_count)
                     else:
                         st.write(f"3D model not available for {space}")
                         return

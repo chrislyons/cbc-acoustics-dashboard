@@ -323,16 +323,34 @@ class Enhanced3DVisualizer:
         
         return fig
     
-    def create_hub_detailed_model(self, show_panels=True, panel_specs=None):
-        """Create detailed Hub model with treatment visualization based on corrected actual measurements
+    def create_hub_detailed_model(self, show_panels=True, panel_count=8):
+        """Create detailed Hub model with treatment visualization based on corrected actual measurements"""
         
-        Args:
-            panel_specs: Dict with panel counts by type, e.g. {"11_inch": 1, "5_5_inch": 4, "3_inch": 2, "2_inch": 0}
-        """
-        
-        # Default panel specs if none provided
-        if panel_specs is None:
-            panel_specs = {"11_inch": 0, "5_5_inch": 4, "3_inch": 2, "2_inch": 0}
+        # Convert panel_count to panel specifications using the dashboard conversion logic
+        if panel_count <= 0:
+            panel_specs = {"11_inch": 0, "5_5_inch": 0, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 1:
+            panel_specs = {"11_inch": 0, "5_5_inch": 1, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 2:
+            panel_specs = {"11_inch": 0, "5_5_inch": 2, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 3:
+            panel_specs = {"11_inch": 0, "5_5_inch": 2, "3_inch": 1, "2_inch": 0}
+        elif panel_count == 4:
+            panel_specs = {"11_inch": 0, "5_5_inch": 3, "3_inch": 1, "2_inch": 0}
+        elif panel_count == 5:
+            panel_specs = {"11_inch": 0, "5_5_inch": 3, "3_inch": 2, "2_inch": 0}
+        elif panel_count == 6:
+            panel_specs = {"11_inch": 0, "5_5_inch": 3, "3_inch": 3, "2_inch": 0}
+        elif panel_count == 7:
+            panel_specs = {"11_inch": 0, "5_5_inch": 4, "3_inch": 3, "2_inch": 0}
+        elif panel_count == 8:
+            panel_specs = {"11_inch": 0, "5_5_inch": 4, "3_inch": 4, "2_inch": 0}
+        elif panel_count <= 12:
+            panel_specs = {"11_inch": 0, "5_5_inch": 4, "3_inch": 4, "2_inch": panel_count - 8}
+        else:
+            panel_specs = {"11_inch": 0, "5_5_inch": min(6, 4 + (panel_count - 12) // 3), 
+                          "3_inch": min(6, 4 + (panel_count - 12) // 3), 
+                          "2_inch": max(0, panel_count - 12)}
         
         # Hub dimensions from corrected measurements (converting inches to feet)
         # Based on actual measurements: Red 83", Blue 104", Green 72", Purple 140", Orange 60", Orange>Red 246"
