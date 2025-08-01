@@ -323,8 +323,16 @@ class Enhanced3DVisualizer:
         
         return fig
     
-    def create_hub_detailed_model(self, show_panels=True, panel_count=8):
-        """Create detailed Hub model with treatment visualization based on corrected actual measurements"""
+    def create_hub_detailed_model(self, show_panels=True, panel_specs=None):
+        """Create detailed Hub model with treatment visualization based on corrected actual measurements
+        
+        Args:
+            panel_specs: Dict with panel counts by type, e.g. {"11_inch": 1, "5_5_inch": 4, "3_inch": 2, "2_inch": 0}
+        """
+        
+        # Default panel specs if none provided
+        if panel_specs is None:
+            panel_specs = {"11_inch": 0, "5_5_inch": 4, "3_inch": 2, "2_inch": 0}
         
         # Hub dimensions from corrected measurements (converting inches to feet)
         # Based on actual measurements: Red 83", Blue 104", Green 72", Purple 140", Orange 60", Orange>Red 246"
@@ -350,7 +358,7 @@ class Enhanced3DVisualizer:
         
         # Add acoustic treatment panels if requested
         if show_panels:
-            self._add_treatment_panels_hub_corrected(fig, panel_count, ceiling_height, grid_height)
+            self._add_treatment_panels_hub_corrected(fig, panel_specs, ceiling_height, grid_height)
         
         # Hide set build furniture for now - will fix later  
         # self._add_hub_furniture_corrected(fig)
@@ -548,145 +556,94 @@ class Enhanced3DVisualizer:
             showlegend=False, hoverinfo='skip'
         ))
     
-    def _add_treatment_panels_hub_corrected(self, fig, panel_count, ceiling_height, grid_height):
-        """Add acoustic treatment panels with proper constraints for The Hub"""
+    def _add_treatment_panels_hub_corrected(self, fig, panel_specs, ceiling_height, grid_height):
+        """Add acoustic treatment panels with proper constraints for The Hub
+        
+        Args:
+            panel_specs: Dict with panel counts by type, e.g. {"11_inch": 1, "5_5_inch": 4, "3_inch": 2, "2_inch": 0}
+        """
         
         panels_used = 0
+        total_panels = sum(panel_specs.values())
         
-        # Priority 1: Ceiling panels - ONLY location available, hanging 2" below grid
-        ceiling_panel_height = grid_height - (2/12)  # 2" below grid (convert to feet)
-        
-        # Limited ceiling space - can only fit a few panels without stacking
-        ceiling_panels = [
-            {"pos": [0, 0, ceiling_panel_height], "name": "Center Ceiling Panel"},
-            {"pos": [-2, 1, ceiling_panel_height], "name": "NW Area Ceiling Panel"},
-            {"pos": [2, -1, ceiling_panel_height], "name": "East Area Ceiling Panel"},
-        ]
-        
-        ceiling_count = min(len(ceiling_panels), panel_count)
-        for i in range(ceiling_count):
-            pos_data = ceiling_panels[i]
+        # Priority 1: 11" Corner Bass Trap - Maximum 1, top priority (borrowed from Studio 8)
+        if panel_specs.get("11_inch", 0) > 0:
+            # Use best corner location (NE - off camera)
+            bass_trap_pos = [4.0, -2.5, 5]  # NE corner position
             self._create_rectangular_panel(
-                fig, pos_data['pos'], 2.0, 4.0, 5.5,
-                self.colors['absorption_panel'], pos_data['name'],
-                "Ceiling panel - hanging 2\" below grid", 'horizontal'
+                fig, bass_trap_pos, 2.0, 4.0, 11.0,  # 11" thickness
+                '#b8860b', "NE Corner 11\" Bass Trap",  # Dark golden rod color like Studio 8
+                "11\" Corner bass trap - Maximum low-frequency control", 'corner-45deg'
             )
-        panels_used += ceiling_count
+            panels_used += 1
         
-        # Priority 2: Corner bass traps - straddling corners like Studio 8, hanging vertically
-        if panel_count > panels_used:
-            # Only corners that are NOT on-camera (avoid SW corner area)
-            # Based on cardinal labels: N=right, E=bottom, S=left, W=top
-            corner_traps = [
-                # Northeast corner - where North (right) meets East (bottom)
-                {"pos": [4.0, -2.5, 5], "name": "NE Corner Bass Trap", "corner_type": "NE"},
-                # Northwest corner - where North (right) meets West (top)
-                {"pos": [3.5, 4.0, 5], "name": "NW Corner Bass Trap", "corner_type": "NW"},
+        # Priority 2: 5.5" Ceiling panels - hanging 2" below grid
+        remaining_5_5_panels = panel_specs.get("5_5_inch", 0)
+        if remaining_5_5_panels > 0:
+            ceiling_panel_height = grid_height - (2/12)  # 2" below grid (convert to feet)
+            
+            ceiling_panels = [
+                {"pos": [0, 0, ceiling_panel_height], "name": "Center 5.5\" Ceiling Panel"},
+                {"pos": [-2, 1, ceiling_panel_height], "name": "NW Area 5.5\" Ceiling Panel"},
+                {"pos": [2, -1, ceiling_panel_height], "name": "East Area 5.5\" Ceiling Panel"},
+                {"pos": [1, 2, ceiling_panel_height], "name": "North Area 5.5\" Ceiling Panel"},
+                {"pos": [-1, -2, ceiling_panel_height], "name": "South Area 5.5\" Ceiling Panel"},
+                {"pos": [3, 1, ceiling_panel_height], "name": "Northeast 5.5\" Ceiling Panel"},
             ]
             
-            corner_count = min(len(corner_traps), panel_count - panels_used)
-            for i in range(corner_count):
-                trap = corner_traps[i]
-                # Vertical corner bass traps 
-                if trap['corner_type'] == 'NW':
-                    # NW trap rotated 90deg to be flush with wall
-                    self._create_rectangular_panel(
-                        fig, trap['pos'], 2.0, 4.0, 5.5,
-                        self.colors['bass_trap'], trap['name'],
-                        "Corner bass trap - flush with wall", 'corner-135deg'
-                    )
-                else:
-                    # NE trap brought inside space
-                    self._create_rectangular_panel(
-                        fig, trap['pos'], 2.0, 4.0, 5.5,
-                        self.colors['bass_trap'], trap['name'],
-                        "Corner bass trap - inside space", 'corner-45deg'
-                    )
-            panels_used += corner_count
-        
-        # Priority 3: Wall panels - AVOID SW corner (on-camera), only remaining walls
-        # Ensure panels stay within room boundaries
-        # Based on cardinal labels: N=right, E=bottom, S=left, W=top
-        if panel_count > panels_used:
-            wall_panels = [
-                # East wall panels - on the EAST wall (bottom in coordinate system, negative Y)
-                {"pos": [0, -3.5, 3], "name": "East Wall Panel 1", "orientation": "east-wall"},
-                {"pos": [0, -3.5, 6], "name": "East Wall Panel 2", "orientation": "east-wall"},
-                
-                # North wall panel - on the NORTH wall (right in coordinate system, positive X)
-                {"pos": [4.5, 0, 4], "name": "North Wall Panel 1", "orientation": "north-wall"},
-            ]
-            
-            available_wall_panels = min(len(wall_panels), panel_count - panels_used)
-            for i in range(available_wall_panels):
-                pos_data = wall_panels[i]
-                orientation = pos_data['orientation']
-                
-                # Make panels parallel to their respective walls 
-                if orientation == "east-wall":
-                    # East wall panels - on east wall (bottom in coordinate system)
-                    self._create_rectangular_panel(
-                        fig, pos_data['pos'], 4.0, 2.0, 3.0,
-                        self.colors['absorption_panel'], pos_data['name'],
-                        "East wall panel", 'vertical-short-wall'
-                    )
-                elif orientation == "north-wall":
-                    # North wall panel - on north wall (right in coordinate system)
-                    self._create_rectangular_panel(
-                        fig, pos_data['pos'], 2.0, 4.0, 3.0,
-                        self.colors['absorption_panel'], pos_data['name'],
-                        "North wall panel", 'vertical-long-wall'
-                    )
-            panels_used += available_wall_panels
-        
-        # Priority 4: Additional Ceiling Treatment - More aggressive ceiling coverage
-        # Additional ceiling panels for higher panel counts
-        if panel_count > 10:
-            additional_ceiling_panels = [
-                {"pos": [-3, -2, ceiling_panel_height], "name": "South Area Ceiling Panel"},
-                {"pos": [3, 2, ceiling_panel_height], "name": "North Area Ceiling Panel"},
-                {"pos": [-1, 3, ceiling_panel_height], "name": "West Area Ceiling Panel"},
-                {"pos": [1, -3, ceiling_panel_height], "name": "East Area Ceiling Panel 2"},
-            ]
-            
-            additional_ceiling_count = min(4, panel_count - panels_used)
-            for i in range(additional_ceiling_count):
-                pos_data = additional_ceiling_panels[i]
+            ceiling_count = min(len(ceiling_panels), remaining_5_5_panels)
+            for i in range(ceiling_count):
+                pos_data = ceiling_panels[i]
                 self._create_rectangular_panel(
                     fig, pos_data['pos'], 2.0, 4.0, 5.5,
-                    '#87CEEB', pos_data['name'],  # Sky blue for additional ceiling
-                    "Additional ceiling panel - expanded coverage", 'horizontal'
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "5.5\" Ceiling panel - hanging 2\" below grid", 'horizontal'
                 )
-            panels_used += additional_ceiling_count
+            panels_used += ceiling_count
         
-        # Priority 5: Final Wall Treatment - Maximum coverage for high panel counts
-        # Additional wall panels avoiding on-camera areas
-        if panel_count > 14:
-            final_wall_panels = [
-                {"pos": [1, -3.5, 4], "name": "East Wall Panel 3", "orientation": "east-wall"},
-                {"pos": [3.5, 1, 4], "name": "North Wall Panel 2", "orientation": "north-wall"},
-                {"pos": [-2, -3.5, 4], "name": "South Wall Panel 1", "orientation": "east-wall"},
-                {"pos": [0, 3.5, 4], "name": "West Wall Panel 1", "orientation": "north-wall"},
+        # Priority 3: 3" panels - wall positions
+        remaining_3_panels = panel_specs.get("3_inch", 0)
+        if remaining_3_panels > 0:
+            wall_panels = [
+                {"pos": [3.5, 4.0, 5], "name": "NW Wall 3\" Panel"},
+                {"pos": [-3, 2, 5], "name": "West Wall 3\" Panel"},
+                {"pos": [4, -2, 4], "name": "East Wall 3\" Panel"},
+                {"pos": [-2, -3, 4], "name": "South Wall 3\" Panel"},
+                {"pos": [2, 3.5, 4], "name": "North Wall 3\" Panel"},
+                {"pos": [-4, 0, 4], "name": "West Center 3\" Panel"},
             ]
             
-            final_wall_count = min(4, panel_count - panels_used)
-            for i in range(final_wall_count):
-                pos_data = final_wall_panels[i]
-                orientation = pos_data['orientation']
-                
-                if orientation == "east-wall":
-                    self._create_rectangular_panel(
-                        fig, pos_data['pos'], 4.0, 2.0, 3.0,
-                        '#FF6347', pos_data['name'],  # Tomato color for final treatment
-                        "Final east wall panel", 'vertical-short-wall'
-                    )
-                elif orientation == "north-wall":
-                    self._create_rectangular_panel(
-                        fig, pos_data['pos'], 2.0, 4.0, 3.0,
-                        '#FF6347', pos_data['name'],  # Tomato color for final treatment
-                        "Final north wall panel", 'vertical-long-wall'
-                    )
-            panels_used += final_wall_count
+            wall_count = min(len(wall_panels), remaining_3_panels)
+            for i in range(wall_count):
+                pos_data = wall_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 3.0,
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "3\" Wall panel - mid-frequency absorption", 'vertical-short-wall'
+                )
+            panels_used += wall_count
+        
+        # Priority 4: 2" panels - additional positions
+        remaining_2_panels = panel_specs.get("2_inch", 0)
+        if remaining_2_panels > 0:
+            ceiling_panel_height_2in = grid_height - (2/12)  # 2" below grid (convert to feet)
+            small_panels = [
+                {"pos": [1, 3, ceiling_panel_height_2in], "name": "Additional 2\" Ceiling Panel"},
+                {"pos": [-3, -1, ceiling_panel_height_2in], "name": "Southwest 2\" Ceiling Panel"},
+                {"pos": [0, -3, ceiling_panel_height_2in], "name": "South 2\" Ceiling Panel"},
+                {"pos": [4, 0, ceiling_panel_height_2in], "name": "East 2\" Ceiling Panel"},
+            ]
+            
+            small_count = min(len(small_panels), remaining_2_panels)
+            for i in range(small_count):
+                pos_data = small_panels[i]
+                self._create_rectangular_panel(
+                    fig, pos_data['pos'], 2.0, 4.0, 2.0,
+                    self.colors['absorption_panel'], pos_data['name'],
+                    "2\" Panel - high-frequency absorption", 'horizontal'
+                )
+            panels_used += small_count
+        
     
     def _add_hub_furniture_accurate(self, fig, width):
         """Add Hub furniture based on actual PDF floorplan"""

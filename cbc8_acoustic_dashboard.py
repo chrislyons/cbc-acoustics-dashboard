@@ -212,6 +212,41 @@ class AcousticDashboard:
             self.treatment_sim = None
             self.rt60_analyzer = None
         
+    def convert_panel_count_to_specs_hub(self, panel_count):
+        """Convert total panel count to panel specifications for The Hub
+        
+        Progressive allocation strategy (following Studio 8 pattern):
+        - 0x 11" bass traps (user must explicitly add in treatment simulator)  
+        - Each panel count change should produce visible 3D model changes
+        - Priority: 5.5" ceiling → 3" walls → 2" supplemental
+        """
+        if panel_count <= 0:
+            return {"11_inch": 0, "5_5_inch": 0, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 1:
+            return {"11_inch": 0, "5_5_inch": 1, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 2:
+            return {"11_inch": 0, "5_5_inch": 2, "3_inch": 0, "2_inch": 0}
+        elif panel_count == 3:
+            return {"11_inch": 0, "5_5_inch": 2, "3_inch": 1, "2_inch": 0}
+        elif panel_count == 4:
+            return {"11_inch": 0, "5_5_inch": 3, "3_inch": 1, "2_inch": 0}
+        elif panel_count == 5:
+            return {"11_inch": 0, "5_5_inch": 3, "3_inch": 2, "2_inch": 0}
+        elif panel_count == 6:
+            return {"11_inch": 0, "5_5_inch": 3, "3_inch": 3, "2_inch": 0}
+        elif panel_count == 7:
+            return {"11_inch": 0, "5_5_inch": 4, "3_inch": 3, "2_inch": 0}
+        elif panel_count == 8:
+            return {"11_inch": 0, "5_5_inch": 4, "3_inch": 4, "2_inch": 0}
+        elif panel_count <= 12:
+            # Add 2" panels for counts 9-12
+            return {"11_inch": 0, "5_5_inch": 4, "3_inch": 4, "2_inch": panel_count - 8}
+        else:
+            # Large configs: cap at reasonable numbers per type
+            return {"11_inch": 0, "5_5_inch": min(6, 4 + (panel_count - 12) // 3), 
+                   "3_inch": min(6, 4 + (panel_count - 12) // 3), 
+                   "2_inch": max(0, panel_count - 12)}
+    
     def load_csv_data(self, filename_pattern):
         """Load CSV data matching pattern"""
         try:
@@ -317,7 +352,7 @@ class AcousticDashboard:
             if hasattr(st.session_state, 'cached_rt60_fig'):
                 st.session_state.cached_rt60_fig = None
             # Reset panel count to space-appropriate default
-            default_count = 8 if selected_space == "The Hub" else 25
+            default_count = 0 if selected_space == "The Hub" else 25
             st.session_state.panel_count = default_count
             # Force rerun to refresh all components
             st.rerun()
@@ -513,7 +548,7 @@ class AcousticDashboard:
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("**Version:** 1.03  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
+        st.markdown("**Version:** 1.04  \n**Prepared:** July 31, 2025  \n**Data Basis:** July 15 test data @ 85dB SPL (pink noise) + 100dB SPL (sine sweep)")
         
         st.subheader("Summary")
         st.write("Presenting acoustic analysis and treatment priorities for **CBC Studio 8** and **The Hub**, based on calibrated Smaart test data, modal analysis, and STI degradation modelling. Both spaces exhibit unique challenges in speech clarity, with tailored treatment plans required to meet broadcast standards.")
@@ -667,7 +702,7 @@ class AcousticDashboard:
         with header_col2:
             # Initialize panel count in session state with space-specific defaults
             if 'panel_count' not in st.session_state:
-                default_count = 8 if space == "The Hub" else 25
+                default_count = 0 if space == "The Hub" else 25
                 st.session_state.panel_count = default_count
             
             # Panel count text input with space-specific max values
@@ -675,7 +710,7 @@ class AcousticDashboard:
             
             # Reset panel count if it exceeds the current space's maximum
             if st.session_state.panel_count > max_panels:
-                default_count = 8 if space == "The Hub" else 25
+                default_count = 0 if space == "The Hub" else 25
                 st.session_state.panel_count = default_count
             
             current_panel_count = st.number_input(
@@ -710,7 +745,10 @@ class AcousticDashboard:
                     if space == "Studio 8":
                         fig = self.visualizer_3d.create_studio8_detailed_model(show_panels=True, panel_count=panel_count)
                     elif space == "The Hub":
-                        fig = self.visualizer_3d.create_hub_detailed_model(show_panels=True, panel_count=panel_count)
+                        # Convert panel count to default panel specifications for The Hub
+                        # Default allocation: 0x 11", prioritize 5.5" and 3" panels
+                        panel_specs = self.convert_panel_count_to_specs_hub(panel_count)
+                        fig = self.visualizer_3d.create_hub_detailed_model(show_panels=True, panel_specs=panel_specs)
                     else:
                         st.write(f"3D model not available for {space}")
                         return

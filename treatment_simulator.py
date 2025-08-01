@@ -703,7 +703,7 @@ class TreatmentSimulator:
                 if 'panel_5_5_inch' not in st.session_state:
                     st.session_state.panel_5_5_inch = 4  # East wall + North wall (2+2)
                 if 'panel_11_inch' not in st.session_state:
-                    st.session_state.panel_11_inch = 0  # No 11" panels for The Hub
+                    st.session_state.panel_11_inch = 0  # Default 0, max 1x 11" bass trap for The Hub
             
             # Shopping cart style selectors - horizontal layout with 4 columns for Studio 8
             st.markdown("**Panels (Mineral Wool, Framing, Hardware, Fabric)**")
@@ -762,9 +762,21 @@ class TreatmentSimulator:
                     )
                     st.session_state.panel_2_inch = panel_2_count
             else:
-                # The Hub - keep 3 columns, no 11" option available
-                col_5, col_3, col_2 = st.columns(3)
-                panel_11_count = 0  # No 11" panels for The Hub
+                # The Hub - 4 columns including 11" bass trap (max 1)
+                col_11, col_5, col_3, col_2 = st.columns(4)
+                
+                with col_11:
+                    st.markdown("**11\" @ $45 ea.**")
+                    panel_11_count = st.number_input(
+                        "Qty:",
+                        min_value=0,
+                        max_value=1,  # Maximum 1x 11" bass trap for The Hub
+                        value=st.session_state.panel_11_inch,
+                        step=1,
+                        key="panel_11_input_hub",
+                        help="Premium corner bass trap - maximum low frequency absorption (top priority)"
+                    )
+                    st.session_state.panel_11_inch = panel_11_count
                 
                 with col_5:
                     st.markdown("**5.5\" @ $30 ea.**")
