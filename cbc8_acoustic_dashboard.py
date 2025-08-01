@@ -306,7 +306,7 @@ class AcousticDashboard:
         # Main header - full width
         st.markdown("""
         <div class="main-header">
-            <h1 style="margin-bottom: 5px;">CBC Sports 8th Floor Acoustics Dashboard</h1>
+            <h1>CBC Sports 8th Floor Acoustics Dashboard</h1>
             <p style="margin-top: 0;">Interactive visualizations of Studio 8 &amp; The Hub acoustic analysis</p>
         </div>
         """, unsafe_allow_html=True)
