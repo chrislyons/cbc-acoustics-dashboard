@@ -1127,10 +1127,10 @@ class FrequencyResponseExplorer:
             
             # Main page analysis selector with persistence - conditional options based on space
             if hasattr(st.session_state, 'selected_space') and st.session_state.selected_space == "The Hub":
-                # Hub options: frequency response now available, but no STI heatmaps
-                analysis_options = ["Magnitude Response", "Phase Response", "Modal Stack Analysis"]
-                # Reset to valid option if currently on STI
-                if st.session_state.freq_analysis_type == "STI Degradation Heatmap":
+                # Hub options: magnitude response and modal analysis only (phase response has data quality issues)
+                analysis_options = ["Magnitude Response", "Modal Stack Analysis"]
+                # Reset to valid option if currently on unavailable options
+                if st.session_state.freq_analysis_type not in analysis_options:
                     st.session_state.freq_analysis_type = "Magnitude Response"
             else:
                 # Full options for Studio 8
